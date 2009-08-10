@@ -1,6 +1,19 @@
 <?php
 
 /**
+ * This source file is subject to the "New BSD License".
+ *
+ * For more information please see http://nettephp.com
+ *
+ * @author     Jan Kuchař
+ * @copyright  Copyright (c) 2009 Jan Kuchař (http://mujserver.net)
+ * @license    New BSD License
+ * @link       http://nettephp.com/extras/tabcontrol
+ */
+
+
+
+/**
  * Tab class
  *
  * show off @property, @property-read, @property-write
