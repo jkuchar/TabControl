@@ -31,7 +31,7 @@ class DefaultPresenter extends BasePresenter
         $tc->sortable = true;
         //$tc->jQueryTabsOptions = "{ fx: { height: 'toggle',opacity:'toggle',marginTop:'toggle',marginBottom:'toggle',paddingTop:'toggle',paddingBottom:'toggle'} }";
         //$tc->handlerComponent = $this; // Is automatic
-        
+
         $t = $tc->addTab("datagrid");
             $t->header = "DataGrid";
             $t->contentFactory = array($this,"createTabDataGrid");

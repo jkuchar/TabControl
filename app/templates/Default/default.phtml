@@ -6,27 +6,45 @@
 {* Obsah stránky *}
 @{block #content}
     <h2>Externí ovládání TabControlu</h2>
-    <table border="2">
+    <table border="2" style="font-size: 80%;">
         <tr>
             <td width="33%">
                 <h3>Neajaxové chování</h3>
-                <a href="{link jdiNaTab! form1}">Přejdi na Formulář 1</a><br>
-                <a href="{link jdiNaTab! datagrid}">Přejdi na DataGrid</a>
+
+                <h4>Přejdi na ...</h4>
+                {foreach $presenter["tabs"]->tabs AS $tabName => $tab}
+                <a href="{link jdiNaTab! $tabName}">{$tab->header}</a> 
+                {/foreach}
             </td>
             <td width="33%">
                 <h3>Ajaxové chování</h3>
-                <a href="{link jdiNaTab! form1}" class="ajax">Přejdi na Formulář 1</a><br>
-                <a href="{link prekresliTab! form1}" class="ajax">Překresli Formulář 1</a><br>
-                <a href="{link jdiNaTab! datagrid}" class="ajax">Přejdi na DataGrid</a>
+
+                <h4>Přejdi na ...</h4>
+                {foreach $presenter["tabs"]->tabs AS $tabName => $tab}
+                <a href="{link jdiNaTab! $tabName}" class="ajax">{$tab->header}</a> 
+                {/foreach}
+
+                <h4>Překresli ...</h4>
+                {foreach $presenter["tabs"]->tabs AS $tabName => $tab}
+                <a href="{link prekresliTab! $tabName}" class="ajax">{$tab->header}</a> 
+                {/foreach}
             </td>
             <td width="33%">
                 <h3>Kombinované chování (doporučeno)</h3>
                 <p>Pokud je požadavek ajaxový, pouze se překreslí cílový tab.</p><br>
                 <p>Pokud je požadavek neajaxový, přejde se na nový tab a přesměruje se pomocí redirect("this") na url bez handleru na změnu tabu. (leší kvůli vyhledávačům)</p><br>
-                <a href="{link jdiNaTabCanonicky! form1}" class="ajax">ajax: Přejdi na Formulář 1</a><br>
-                <a href="{link jdiNaTabCanonicky! datagrid}" class="ajax">ajax: Přejdi na DataGrid</a><br>
-                <a href="{link jdiNaTabCanonicky! form1}">normal: Přejdi na Formulář 1</a><br>
-                <a href="{link jdiNaTabCanonicky! datagrid}">normal: Přejdi na DataGrid</a><br>
+
+                <h4>Přejdi na ...</h4>
+                <h5>AJAXově</h5>
+
+                {foreach $presenter["tabs"]->tabs AS $tabName => $tab}
+                <a href="{link jdiNaTabCanonicky! $tabName}" class="ajax">{$tab->header}</a> 
+                {/foreach}
+
+                <h5>Normálně</h5>
+                {foreach $presenter["tabs"]->tabs AS $tabName => $tab}
+                <a href="{link jdiNaTabCanonicky! $tabName}">{$tab->header}</a> 
+                {/foreach}
             </td>
         </tr>
     </table>

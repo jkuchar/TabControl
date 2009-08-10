@@ -17,6 +17,7 @@
  * Tab class
  *
  * show off @property, @property-read, @property-write
+ * @property mixed $content Content of the tab
  */
 class Tab extends Control
 {

@@ -336,6 +336,8 @@ class TabControl extends Control
         return $this->components;
     }
 
+
+
     /**
      * Returns tabs order - there are ALL tabs
      * @return array|null
@@ -397,8 +399,7 @@ class TabControl extends Control
         $newOrder = array();
         foreach($order AS $tabWithTree){
             $tabName = explode("__", $tabWithTree);
-            $tabName = $tabName[2];
-            $newOrder[] = $tabName;
+            $newOrder[] = $tabName[2];
         }
         $this->onTabsOrderChange($newOrder,$this);
         if(!$this->saveTabsOrder[0]->tryCall($this->saveTabsOrder[1], array("order"=>$newOrder))){
@@ -407,7 +408,7 @@ class TabControl extends Control
     }
 
     /**
-     * Save tabs order to session (default implemetation od TabControl::saveTabsOrder)
+     * Saves tabs order to session (default implemetation od TabControl::saveTabsOrder)
      * @param array $order
      */
     function saveTabsOrder(array $order){
