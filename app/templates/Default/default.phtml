@@ -1,0 +1,35 @@
+@{extends ../@layout.phtml}
+
+{* Nadpis stránky *}
+{block #title}Tab Control{/block}
+
+{* Obsah stránky *}
+@{block #content}
+    <h2>Externí ovládání TabControlu</h2>
+    <table border="2">
+        <tr>
+            <td width="33%">
+                <h3>Neajaxové chování</h3>
+                <a href="{link jdiNaTab! form1}">Přejdi na Formulář 1</a><br>
+                <a href="{link jdiNaTab! datagrid}">Přejdi na DataGrid</a>
+            </td>
+            <td width="33%">
+                <h3>Ajaxové chování</h3>
+                <a href="{link jdiNaTab! form1}" class="ajax">Přejdi na Formulář 1</a><br>
+                <a href="{link prekresliTab! form1}" class="ajax">Překresli Formulář 1</a><br>
+                <a href="{link jdiNaTab! datagrid}" class="ajax">Přejdi na DataGrid</a>
+            </td>
+            <td width="33%">
+                <h3>Kombinované chování (doporučeno)</h3>
+                <p>Pokud je požadavek ajaxový, pouze se překreslí cílový tab.</p><br>
+                <p>Pokud je požadavek neajaxový, přejde se na nový tab a přesměruje se pomocí redirect("this") na url bez handleru na změnu tabu. (leší kvůli vyhledávačům)</p><br>
+                <a href="{link jdiNaTabCanonicky! form1}" class="ajax">ajax: Přejdi na Formulář 1</a><br>
+                <a href="{link jdiNaTabCanonicky! datagrid}" class="ajax">ajax: Přejdi na DataGrid</a><br>
+                <a href="{link jdiNaTabCanonicky! form1}">normal: Přejdi na Formulář 1</a><br>
+                <a href="{link jdiNaTabCanonicky! datagrid}">normal: Přejdi na DataGrid</a><br>
+            </td>
+        </tr>
+    </table>
+    <h2 style="margin: 30px 0px 10px 0px;">Samotný TabControl</h2>
+    @{widget tabs}
+@{/block}

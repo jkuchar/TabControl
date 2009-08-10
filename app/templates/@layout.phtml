@@ -1,0 +1,58 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta http-equiv="Content-Language" content="en" />
+
+	<title>TabControl - Nette Framework example</title>
+
+	<!-- custom CSS -->
+	<link rel="stylesheet" media="screen" href="http://jqueryui.com/latest/themes/cupertino/ui.all.css" type="text/css" />
+	<link rel="stylesheet" media="screen" href="{$baseUri}css/screen.css" type="text/css" />
+	<link rel="stylesheet" media="screen" href="{$baseUri}css/datagrid.css" type="text/css" />
+	<link rel="stylesheet" media="screen" href="{$baseUri}css/ajax.css" type="text/css" />
+	<link rel="stylesheet" media="print" href="{$baseUri}css/print.css" type="text/css" />
+
+	<!-- jQuery -->
+	<script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
+	<script type="text/javascript" src="{$baseUri}js/jquery.livequery.js"></script>
+	<script type="text/javascript" src="http://jqueryui.com/latest/ui/ui.core.js"></script>
+	<script type="text/javascript" src="http://jqueryui.com/latest/ui/ui.datepicker.js"></script>
+	<script type="text/javascript" src="http://jqueryui.com/latest/ui/ui.tabs.js"></script>
+	<script type="text/javascript" src="http://jqueryui.com/latest/ui/i18n/ui.datepicker-cs.js"></script>
+
+	<!-- custom JS -->
+	<script src="{$baseUri}js/jquery.nette.js" type="text/javascript"></script>
+	<script src="{$baseUri}js/datagrid.js" type="text/javascript"></script>
+</head>
+
+<body>
+	<h1>TabControl - Nette Framework example</h1>
+
+	{snippet flashes}
+	<div id="flashes">
+		{foreach $flashes as $flash}
+		<div class="flash {$flash->type}">{!$flash->message}</div>
+		{/foreach}
+
+		<!--
+		<div class="flash info">Info message.</div>
+		<div class="flash success">Success message.</div>
+		<div class="flash warning">Warning message.</div>
+		<div class="flash error">Error message.</div>
+		<div class="flash validation">Validation message.</div>
+		-->
+
+	</div>
+	{/snippet}
+
+
+	<div id="mainframe-cover">
+		<div id="mainframe" class="rounded">
+			@{block #content}
+                            No content
+                        @{/block}
+		</div>
+	</div>
+</body>
+</html>
