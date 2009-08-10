@@ -38,7 +38,7 @@ class TabControl extends Control
      * @var string
      * @persistent
      */
-    public $activeTab;
+    public $tab;
 
     /**
      * SELECT: First tab (default)
@@ -148,7 +148,7 @@ class TabControl extends Control
     public $loadTabsOrder;
 
     static function getPersistentParams(){
-        return array("activeTab");
+        return array("tab");
     }
 
     public function  __construct($parent, $name) {
@@ -171,8 +171,8 @@ class TabControl extends Control
      */
     public function addTab($name){
         // Pokud není aktuální záložka -> nastavíme ji
-        if(count($this->tabs)===0 and $this->activeTab===null)
-            $this->activeTab = $name;
+        if(count($this->tabs)===0 and $this->tab===null)
+            $this->tab = $name;
 
         return new Tab($this,$name); // It will be registered automaticly
     }
@@ -210,7 +210,7 @@ class TabControl extends Control
         // -> přesunuto do addTab
         if(count($this->tabs)==0) throw new InvalidStateException("There is no tabs!");
 
-        if(!isSet($this->tabs[$this->activeTab]))
+        if(!isSet($this->tabs[$this->tab]))
             throw new InvalidStateException("Active tab is not registered!");
 
         if($this->presenter->isAjax())
@@ -222,12 +222,12 @@ class TabControl extends Control
 
         // Pokud je NEajaxový požadavek, tak se bude renderovat pouze aktivní tab
         if(!$this->presenter->isAjax())
-            $this->tabsForDraw = array($this->activeTab=>true);
+            $this->tabsForDraw = array($this->tab=>true);
 
         $template = $this->createTemplate();
         $template->registerFilter('Nette\Templates\CurlyBracketsFilter::invoke');
         $template->setFile(DIRNAME(__FILE__)."/TabControl.phtml");
-        $template->activeTab = $this->tabs[$this->activeTab];
+        $template->activeTab = $this->tabs[$this->tab];
         $template->render();
     }
 
@@ -245,7 +245,7 @@ class TabControl extends Control
             $tab = $firstTab->name;
         }
         if($this->tabs[(string)$tab] instanceof Tab){
-            $this->activeTab  = $tab;
+            $this->tab  = $tab;
             $this->javaScript = "tabs.tabs('select','".$this->getSnippetId($tab)."')";
         }
         $this->redraw(self::REDRAW_CURRENT);
@@ -260,7 +260,7 @@ class TabControl extends Control
      */
     function redraw($tab=self::REDRAW_CURRENT,$invalidate=true){
         if($tab===self::REDRAW_CURRENT)
-            $tab = $this->activeTab;
+            $tab = $this->tab;
         if($invalidate === true){
             if($tab === self::REDRAW_ALL)
                 $this->invalidateControl();
@@ -388,7 +388,7 @@ class TabControl extends Control
      * Do not call directly!
      */
     function handleSelect(){
-        $this->select($this->activeTab);
+        $this->select($this->tab);
         if(!$this->presenter->isAjax() and $this->isSignalReceiver($this, "select"))
             $this->redirect("this");
     }

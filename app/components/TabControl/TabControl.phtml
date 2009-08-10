@@ -19,7 +19,7 @@ For more information please see http://nettephp.com
     {!$control->tabContainer->startTag()}
         {* Navigace v tabech *}
         <ul class="ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all" id="{$control->getSnippetId('div_ul')}">
-            {foreach $control->components AS $name => $tab}
+            {foreach $control->tabs AS $name => $tab}
                 <?
                   $li = Html::el("li")->class("ui-tabs-panel ui-widget-content ui-state-default ui-corner-top");
                   $li->id = $control->getSnippetId("div_ul_li__".$name);
@@ -29,7 +29,7 @@ For more information please see http://nettephp.com
                       $li->addClass("ui-state-default");
                 ?>
                 {!$li->startTag()}
-                    <a id="{$control->getSnippetId('div_ul_li_a__'.$name)}" href="{link select!, activeTab=>$name}">
+                    <a id="{$control->getSnippetId('div_ul_li_a__'.$name)}" href="{link select!, tab=>$name}">
                        <span>{!$tab->header}</span>
                     </a>
                 {!$li->endTag()}
@@ -37,7 +37,7 @@ For more information please see http://nettephp.com
         </ul>
 
         {* Výpis obsahu tabů *}
-        @{foreach $control->components AS $name => $tab}
+        @{foreach $control->tabs AS $name => $tab}
             {* Musí se provést vždy - proto zavináč *}
             @{?
                 $container = Html::el("div")->addClass("ui-tabs-panel ui-widget-content ui-corner-bottom");
@@ -64,7 +64,7 @@ For more information please see http://nettephp.com
                         {/if}
                     {/foreach}
                 {/if}
-                {foreach $control->components AS $name => $tab}
+                {foreach $control->tabs AS $name => $tab}
                         $("#"+{$control->getSnippetId('div_ul_li_a__'.$name)}).each(function(){
                             var jThis = $(this);
                             jThis.attr("url",jThis.attr("href"));
