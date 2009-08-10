@@ -112,6 +112,30 @@ class TabControl extends Control
      */
     private $tabsForDraw;
 
+    /**
+     * Add support for sorting tabs (requires jQuery UI Sortable)
+     * @var bool
+     */
+    public $sortable = false;
+
+    /**
+     * When tabs order is chaged
+     * @var array
+     */
+    public $onTabsOrderChange = array();
+
+    /**
+     * Callback - save tabs order
+     * @var array
+     */
+    public $saveTabsOrder;
+
+    /**
+     * Callback - load tabs order
+     * @var array
+     */
+    public $loadTabsOrder;
+
     static function getPersistentParams(){
         return array("activeTab");
     }
@@ -121,6 +145,8 @@ class TabControl extends Control
         $this->tabContainer = Html::el("div")->class("tabs");
         $this->handlerComponent = $parent;
         $this->DOMtabsID = $this->getSnippetId("jQueryUITabs");
+        $this->saveTabsOrder = array($this,"saveTabsOrder");
+        $this->loadTabsOrder = array($this,"loadTabsOrder");
     }
 
     /**************************************************************************/
@@ -144,6 +170,23 @@ class TabControl extends Control
      * Render tab control
      */
     public function render(){
+
+        // Reorder tabs
+        if(($order = $this->getTabsOrder()) !== null) {
+
+            // Uložíme si taby do $tabs a odstraníme a odregistrujeme je od stromu komponent
+            $tabs = array();
+            foreach($this->tabs AS $tabName => $tab){
+                $tabs[$tabName] = $tab;
+                $this->removeComponent($tab);
+            }
+
+            // Zaregistrujeme taby v novém pořadí
+            foreach($order AS $tabName){
+                $this->addComponent($tabs[$tabName], $tabName);
+            }
+        }
+
         // Mode: auto
         if($this->mode===self::MODE_AUTO){
             if(count($this->tabs)<=3)
@@ -154,6 +197,7 @@ class TabControl extends Control
 
         // Pokud není nic vybráno - nastavíme první položku
         // -> přesunuto do addTab
+        if(count($this->tabs)==0) throw new InvalidStateException("There is no tabs!");
 
         if(!isSet($this->tabs[$this->activeTab]))
             throw new InvalidStateException("Active tab is not registered!");
@@ -218,6 +262,15 @@ class TabControl extends Control
         return $this;
     }
 
+    /**
+     * Tab exists?
+     * @param string $tab
+     * @return bool
+     */
+    function tabExists($tab){
+        return isSet($this->tabs[$tab]);
+    }
+
     /**************************************************************************/
     /*                        Getters and setters                             */
     /**************************************************************************/
@@ -272,6 +325,31 @@ class TabControl extends Control
         return $this->components;
     }
 
+    /**
+     * Returns tabs order - there are ALL tabs
+     * @return array|null
+     */
+    function getTabsOrder(){
+        $order = call_user_func_array($this->loadTabsOrder, array());
+        if($order === false) {
+            throw new InvalidStateException("TabControl::loadTabsOrder is not callable!");
+        }
+        if($order===array()) return null;
+
+        $tabs = array();
+
+        foreach($order AS $tabName){
+            if($this->tabExists($tabName))
+            $tabs[] = $tabName;
+        }
+
+        foreach($this->tabs AS $tabName => $tab){
+            if(array_search($tabName,$tabs) === false)
+                $tabs[] = $tabName;
+        }
+        return $tabs;
+    }
+
     /**************************************************************************/
     /*                              Handlers                                  */
     /**************************************************************************/
@@ -296,10 +374,43 @@ class TabControl extends Control
      * (internal) Activates tab
      * Do not call directly!
      */
-    function handleActivateTab(){
+    function handleSelect(){
         $this->select($this->activeTab);
-        if(!$this->presenter->isAjax() and $this->isSignalReceiver($this, "activateTab"))
+        if(!$this->presenter->isAjax() and $this->isSignalReceiver($this, "select"))
             $this->redirect("this");
+    }
+
+    function handleSaveTabsOrder(){
+        // Nette řadí přijaté pole podle abecedy. :( Musíme použít přímý přístup
+        $order = $_GET[$this->getUniqueId()."-order"];
+        $newOrder = array();
+        foreach($order AS $tabWithTree){
+            $tabName = explode("__", $tabWithTree);
+            $tabName = $tabName[2];
+            $newOrder[] = $tabName;
+        }
+        $this->onTabsOrderChange($newOrder,$this);
+        if(!$this->saveTabsOrder[0]->tryCall($this->saveTabsOrder[1], array("order"=>$newOrder))){
+            throw new InvalidStateException("TabControl::saveTabsOrder is not callable!");
+        }
+    }
+
+    /**
+     * Save tabs order to session (default implemetation od TabControl::saveTabsOrder)
+     * @param array $order
+     */
+    function saveTabsOrder(array $order){
+        $session = Environment::getSession("TabControl\\".$this->getUniqueId());
+        $session["order"] = $order;
+    }
+
+    /**
+     * Loads tabs order from session (default implemetation od TabControl::loadTabsOrder)
+     * @return array
+     */
+    function loadTabsOrder(){
+        $session = Environment::getSession("TabControl\\".$this->getUniqueId());
+        return (array)$session["order"];
     }
     /**************************************************************************/
     /*                         Extension methods                              */
