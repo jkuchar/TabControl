@@ -427,7 +427,7 @@ class TabControl extends Control
             $tabName = explode("__", $tabWithTree);
             $newOrder[] = $tabName[2];
         }
-        $this->onTabsOrderChange($newOrder,$this);
+        $this->onOrderChange($newOrder,$this);
         if(!$this->saveTabsOrder[0]->tryCall($this->saveTabsOrder[1], array("order"=>$newOrder))){
             throw new InvalidStateException("TabControl::saveTabsOrder is not callable!");
         }
