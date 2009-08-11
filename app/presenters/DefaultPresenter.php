@@ -33,7 +33,7 @@ class DefaultPresenter extends BasePresenter
         //$tc->handlerComponent = $this; // Is automatic
 
         $t = $tc->addTab("datagrid");
-            $t->header = "DataGrid";
+            $t->header = "<i>Data</i>Grid";
             $t->contentFactory = array($this,"createTabDataGrid");
             $t->hasSnippets = true; // Potřeba nastavit u každého tabu, ve kterém budou snippety! Jinak nebude fungovat AJAX! Mástejnou funkci jako @ v šablonách
 
@@ -246,17 +246,14 @@ class DefaultPresenter extends BasePresenter
 
 
     /* ### Handlery k odkazů v sekci Externí ovládání TabControlu ### */
-    function handleJdiNaTab($tab){
-        $this["tabs"]->select($tab);
-    }
 
-    function handleJdiNaTabCanonicky($tab){
+    function handlePrepniNa($tab){
         $this["tabs"]->select($tab);
         if(!$this->isAjax())
             $this->redirect("this");
     }
 
-    function handlePrekresliTab($tab){
+    function handlePrekresli($tab){
         $this["tabs"]->redraw($tab);
     }
 }

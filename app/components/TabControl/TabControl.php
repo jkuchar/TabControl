@@ -133,7 +133,7 @@ class TabControl extends Control
      * When tabs order is chaged
      * @var array
      */
-    public $onTabsOrderChange = array();
+    public $onOrderChange = array();
 
     /**
      * Callback - save tabs order
@@ -170,10 +170,6 @@ class TabControl extends Control
      * @return Tab
      */
     public function addTab($name){
-        // Pokud není aktuální záložka -> nastavíme ji
-        if(count($this->tabs)===0 and $this->tab===null)
-            $this->tab = $name;
-
         return new Tab($this,$name); // It will be registered automaticly
     }
 
@@ -181,10 +177,10 @@ class TabControl extends Control
      * Render tab control
      */
     public function render(){
+        if(count($this->tabs)==0) throw new InvalidStateException("There is no registered tabs!");
 
         // Reorder tabs
         if(($order = $this->getTabsOrder()) !== null) {
-
             // Uložíme si taby do $tabs a odstraníme a odregistrujeme je od stromu komponent
             $tabs = array();
             foreach($this->tabs AS $tabName => $tab){
@@ -206,28 +202,25 @@ class TabControl extends Control
                 $this->mode = self::MODE_LAZY; // Hodně tabů, načteme to, až to bude potřeba
         }
 
-        // Pokud není nic vybráno - nastavíme první položku
-        // -> přesunuto do addTab
-        if(count($this->tabs)==0) throw new InvalidStateException("There is no tabs!");
-
-        if(!isSet($this->tabs[$this->tab]))
-            throw new InvalidStateException("Active tab is not registered!");
-
-        if($this->presenter->isAjax())
-        foreach($this->tabs AS $tab){
-            if($tab->hasSnippets === true){
-                $this->redraw($tab->name,FALSE);
+        if($this->presenter->isAjax()){
+            foreach($this->tabs AS $tab){
+                if($tab->hasSnippets === true){
+                    $this->redraw($tab->name,FALSE);
+                }
             }
         }
 
+        if(!isSet($this->tabs[$this->getTab()]))
+            throw new InvalidStateException("Active tab is not registered!");
+
         // Pokud je NEajaxový požadavek, tak se bude renderovat pouze aktivní tab
         if(!$this->presenter->isAjax())
-            $this->tabsForDraw = array($this->tab=>true);
+            $this->tabsForDraw = array($this->getTab()=>true);
 
         $template = $this->createTemplate();
         $template->registerFilter('Nette\Templates\CurlyBracketsFilter::invoke');
         $template->setFile(DIRNAME(__FILE__)."/TabControl.phtml");
-        $template->activeTab = $this->tabs[$this->tab];
+        $template->activeTab = $this->tabs[$this->getTab()];
         $template->render();
     }
 
@@ -254,32 +247,64 @@ class TabControl extends Control
 
     /**
      * Redraws tab
-     * @param mixed $tab Accepts constants TabControl::REDRAW_CURRENT and TabControl::REDRAW_ALL or tab name
-     * @param bool $invalidate (internal) Invalidate tab
+     * @param mixed $tab        Accepts constants TabControl::REDRAW_CURRENT and TabControl::REDRAW_ALL or tab name
+     * @param bool $invalidate  (internal) Invalidate tab
      * @return TabControl
      */
     function redraw($tab=self::REDRAW_CURRENT,$invalidate=true){
-        if($tab===self::REDRAW_CURRENT)
-            $tab = $this->tab;
+        if($tab===self::REDRAW_CURRENT OR $tab === self::REDRAW_ALL)
+            $tabName = $this->getTab();
+        else
+            $tabName = $tab;
+            
+        $this->tabExists($tabName, TRUE);
+
         if($invalidate === true){
-            if($tab === self::REDRAW_ALL)
+            if($tab === self::REDRAW_ALL){
                 $this->invalidateControl();
-            else
-                $this->invalidateControl($tab);
+            }else{
+                $this->invalidateControl($tabName);
+            }
         }
 
-        $this->tabsForDraw[$tab]=true;
+        $this->tabsForDraw[$tabName]=true;
 
         return $this;
     }
 
     /**
      * Tab exists?
-     * @param string $tab
+     * @param string $tab   Tab name
+     * @param bool   $need
      * @return bool
      */
-    function tabExists($tab){
-        return isSet($this->tabs[$tab]);
+    function tabExists($tab,$need=false){
+        $exists = isSet($this->tabs[(string)$tab]);
+        if($need and !$exists) throw new InvalidStateException("Tab ".(string)$tab." not exists!");
+        return $exists;
+    }
+
+    /**
+     * Genereates link with onclick JavaScript (fastest way to change tab)
+     * @param string $tab   Tab name
+     * @return Html
+     */
+    function selectAnchor($tab,$caption=""){
+        $this->tabExists($tab,TRUE);
+        return Html::el("a")
+                ->setHtml($caption)
+                ->href($this->generateSelectLink($tab))
+                ->onclick("$('#".$this->DOMtabsID."').tabs('select','".$this->getSnippetId($tab)."');return false;");
+    }
+
+    /**
+     * Generates link for selecting tab
+     * @param  string $tab  Tab name
+     * @return string       Generated link
+     */
+    function generateSelectLink($tab) {
+        $this->tabExists($tab,TRUE);
+        return $this->link("select!", array("tab"=>$tab));
     }
 
     /**************************************************************************/
@@ -318,12 +343,13 @@ class TabControl extends Control
 
 
     /**
-     * Returns Tab object
-     * @param string $tab Tab name
+     * Returns active tab name
      * @return Tab
      */
-    function getTab($tab){
-        return $this->tabs[$tab];
+    function getTab(){
+        if($this->tab === null)
+            $this->select(self::SELECT_FIRST);
+        return $this->tab;
     }
 
 
@@ -388,7 +414,7 @@ class TabControl extends Control
      * Do not call directly!
      */
     function handleSelect(){
-        $this->select($this->tab);
+        $this->select($this->getTab());
         if(!$this->presenter->isAjax() and $this->isSignalReceiver($this, "select"))
             $this->redirect("this");
     }
@@ -405,6 +431,7 @@ class TabControl extends Control
         if(!$this->saveTabsOrder[0]->tryCall($this->saveTabsOrder[1], array("order"=>$newOrder))){
             throw new InvalidStateException("TabControl::saveTabsOrder is not callable!");
         }
+        throw new AbortException(); // Ukončníme skript
     }
 
     /**
