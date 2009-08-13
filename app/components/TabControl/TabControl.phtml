@@ -107,11 +107,20 @@ For more information please see http://nettephp.com
                     $.getJSON({link preload!});
                 {/if}
                 */
-                $("#"+{$control->DOMtabsID}).tabs({!$component->jQueryTabsOptions}){if $control->sortable}.find(".ui-tabs-nav").sortable({ axis:'x',distance:25,stop:function(e,ui){
-                        {* Sortable *}
-                        var order = $(this).sortable("toArray");
-                        $.get({link saveTabsOrder! 'order' => 'order'}, {"{!$component->getUniqueId()}-order[]":order});
-                }}){/if};
+
+                $("#"+{$control->DOMtabsID}).tabs({!$component->jQueryTabsOptions})
+                {if $control->sortable}
+                .find(".ui-tabs-nav") // Pokracujeme v float z predchoziho radku
+                    .sortable({
+                        axis:'x',
+                        distance:25,
+                        stop:function(e,ui){
+                            $(ui.item).css('left','auto');
+                            $(ui.item).css('top','auto');
+                            var order = $(this).sortable("toArray");
+                            $.get({link saveTabsOrder! 'order' => 'order'}, {"{!$component->getUniqueId()}-order[]":order});
+                        }
+                }){/if};
             })
         </script>
         {snippet JavaScript}
