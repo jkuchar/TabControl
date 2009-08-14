@@ -226,11 +226,11 @@ class TabControl extends Control
 
     /**
      * Selects tab
-     * @param string $tab Tab name
-     * @param bool   $redirect C
+     * @param string $tab         Tab name
+     * @param bool   $invalidate  (internal) Invalidate tab?
      * @return TabControl
      */
-    function select($tab){
+    function select($tab,$invalidate=true){
         if($tab===self::SELECT_FIRST){
             reset($this->tabs);
             if(($firstTab = current($this->tabs))===false)
@@ -241,7 +241,7 @@ class TabControl extends Control
             $this->tab  = $tab;
             $this->javaScript = "tabs.tabs('select','".$this->getSnippetId($tab)."')";
         }
-        $this->redraw(self::REDRAW_CURRENT);
+        $this->redraw(self::REDRAW_CURRENT,$invalidate);
         return $this;
     }
 
@@ -348,7 +348,7 @@ class TabControl extends Control
      */
     function getTab(){
         if($this->tab === null)
-            $this->select(self::SELECT_FIRST);
+            $this->select(self::SELECT_FIRST,FALSE);
         return $this->tab;
     }
 
