@@ -48,6 +48,7 @@ For more information please see http://nettephp.com
                 @{if isSet($component->tabsForDraw[$name])}
                     @{? $tab->renderContent(); }
                 @{/if}
+                <div class="ui-helper-clearfix"></div>
             {/snippet}
         @{/foreach}
     {!$control->tabContainer->endTag()}
@@ -108,19 +109,21 @@ For more information please see http://nettephp.com
                 {/if}
                 */
 
-                $("#"+{$control->DOMtabsID}).tabs({!$component->jQueryTabsOptions})
+                $("#"+{$control->DOMtabsID}).tabs({!$component->jQueryTabsOptions});
                 {if $control->sortable}
-                .find(".ui-tabs-nav") // Pokracujeme v float z predchoziho radku
-                    .sortable({
+                var options = {
                         axis:'x',
-                        distance:25,
                         stop:function(e,ui){
                             $(ui.item).css('left','auto');
                             $(ui.item).css('top','auto');
                             var order = $(this).sortable("toArray");
                             $.get({link saveTabsOrder! 'order' => 'order'}, {"{!$component->getUniqueId()}-order[]":order});
                         }
-                }){/if};
+                };
+                if(!$.browser.msie) options.distance = 25;
+                $("#"+{$control->DOMtabsID}).find(".ui-tabs-nav") // Pokracujeme v float z predchoziho radku
+                    .sortable(options);
+                {/if};
             })
         </script>
         {snippet JavaScript}
