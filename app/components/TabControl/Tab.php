@@ -145,40 +145,8 @@ class Tab extends Control
                     $args = func_get_args();
                     array_shift($args);
             }
-
-            try {
-                return $this->_link($this,$destination, $args);
-            } catch (InvalidLinkException $e) {
-                // Komponenta nad TabControlem
-                return $this->parent->handlerComponent->link($destination, $args);
-            }
+            return $this->parent->handlerComponent->link($destination, $args);
     }
-
-    /**
-     * Generates URL to presenter, action or signal.
-     * Always throws exception!
-     *
-     * This will try to generate URL on $this component. If fails try to generate url on parent.
-     * @param  PresenterComponent
-     * @param  string   destination in format "[[module:]presenter:]action" or "signal!"
-     * @param  array|mixed
-     * @return string
-     * @throws InvalidLinkException
-     */
-    private function _link(PresenterComponent $obj,$destination, $args = array())
-    {
-        if($obj === $this)
-            $link = parent::link($destination, $args);
-        else
-            $link = $obj->link($destination, $args);
-
-        if($link === "#")
-            throw new InvalidLinkException();
-        elseif(preg_match("/^error:/", $link))
-            throw new InvalidLinkException();
-        else return $link;
-    }
-
 
     function select(){
         return $this->parent->select($this->name);
