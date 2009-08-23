@@ -230,7 +230,7 @@ class TabControl extends Control
      * @param bool   $invalidate  (internal) Invalidate tab?
      * @return TabControl
      */
-    function select($tab,$invalidate=true){
+    function select($tab,$invalidate=true,$JSSelect=true){
         if($tab===self::SELECT_FIRST){
             reset($this->tabs);
             if(($firstTab = current($this->tabs))===false)
@@ -239,7 +239,8 @@ class TabControl extends Control
         }
         if($this->tabs[(string)$tab] instanceof Tab){
             $this->tab  = $tab;
-            $this->javaScript = "tabs.tabs('select','".$this->getSnippetId($tab)."')";
+            if($JSSelect)
+                $this->javaScript = "tabs.tabs('select','".$this->getSnippetId($tab)."')";
         }
         $this->redraw(self::REDRAW_CURRENT,$invalidate);
         return $this;
@@ -348,7 +349,7 @@ class TabControl extends Control
      */
     function getTab(){
         if($this->tab === null)
-            $this->select(self::SELECT_FIRST,FALSE);
+            $this->select(self::SELECT_FIRST,FALSE,FALSE);
         return $this->tab;
     }
 
@@ -431,7 +432,6 @@ class TabControl extends Control
         if(!$this->saveTabsOrder[0]->tryCall($this->saveTabsOrder[1], array("order"=>$newOrder))){
             throw new InvalidStateException("TabControl::saveTabsOrder is not callable!");
         }
-        throw new AbortException(); // Ukončníme skript
     }
 
     /**
