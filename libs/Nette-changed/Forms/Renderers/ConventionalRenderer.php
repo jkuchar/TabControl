@@ -15,12 +15,11 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Forms
- * @version    $Id: ConventionalRenderer.php 467 2009-08-03 14:43:49Z david@grudl.com $
  */
 
-/*namespace Nette\Forms;*/
 
-/*use Nette\Web\Html;*/
+
+
 
 
 
@@ -37,7 +36,7 @@ require_once dirname(__FILE__) . '/../../Forms/IFormRenderer.php';
  * @copyright  Copyright (c) 2004, 2009 David Grudl
  * @package    Nette\Forms
  */
-class ConventionalRenderer extends /*Nette\*/Object implements IFormRenderer
+class ConventionalRenderer extends Object implements IFormRenderer
 {
 	/**
 	 *  /--- form.container
@@ -177,11 +176,12 @@ class ConventionalRenderer extends /*Nette\*/Object implements IFormRenderer
 	/**
 	 * Sets JavaScript handler.
 	 * @param  object
-	 * @return void
+	 * @return ConventionalRenderer  provides a fluent interface
 	 */
 	public function setClientScript($clientScript = NULL)
 	{
 		$this->clientScript = $clientScript;
+		return $this;
 	}
 
 
@@ -245,9 +245,12 @@ class ConventionalRenderer extends /*Nette\*/Object implements IFormRenderer
 			$el->action = $uri[0];
 			$s = '';
 			if (isset($uri[1])) {
-				foreach (explode('&', $uri[1]) as $param) {
+				foreach (preg_split('#[;&]#', $uri[1]) as $param) {
 					$parts = explode('=', $param, 2);
-					$s .= Html::el('input', array('type' => 'hidden', 'name' => urldecode($parts[0]), 'value' => urldecode($parts[1])));
+					$name = urldecode($parts[0]);
+					if (!isset($this->form[$name])) {
+						$s .= Html::el('input', array('type' => 'hidden', 'name' => $name, 'value' => urldecode($parts[1])));
+					}
 				}
 				$s = "\n\t" . $this->getWrapper('hidden container')->setHtml($s);
 			}
@@ -383,7 +386,7 @@ class ConventionalRenderer extends /*Nette\*/Object implements IFormRenderer
 	public function renderControls($parent)
 	{
 		if (!($parent instanceof FormContainer || $parent instanceof FormGroup)) {
-			throw new /*\*/InvalidArgumentException("Argument must be FormContainer or FormGroup instance.");
+			throw new InvalidArgumentException("Argument must be FormContainer or FormGroup instance.");
 		}
 
 		$container = $this->getWrapper('controls container');
@@ -448,7 +451,7 @@ class ConventionalRenderer extends /*Nette\*/Object implements IFormRenderer
 		$s = array();
 		foreach ($controls as $control) {
 			if (!($control instanceof IFormControl)) {
-				throw new /*\*/InvalidArgumentException("Argument must be array of IFormControl instances.");
+				throw new InvalidArgumentException("Argument must be array of IFormControl instances.");
 			}
 			$s[] = (string) $control->getControl();
 		}
@@ -526,7 +529,7 @@ class ConventionalRenderer extends /*Nette\*/Object implements IFormRenderer
 
 	/**
 	 * @param  string
-	 * @return Nette\Web\Html
+	 * @return Html
 	 */
 	protected function getWrapper($name)
 	{

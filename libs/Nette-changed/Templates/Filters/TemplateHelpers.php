@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Templates
- * @version    $Id: TemplateHelpers.php 474 2009-08-04 00:43:08Z david@grudl.com $
  */
 
-/*namespace Nette\Templates;*/
+
 
 
 
@@ -37,7 +36,7 @@ final class TemplateHelpers
 	 */
 	final public function __construct()
 	{
-		throw new /*\*/LogicException("Cannot instantiate static class " . get_class($this));
+		throw new LogicException("Cannot instantiate static class " . get_class($this));
 	}
 
 
@@ -50,12 +49,12 @@ final class TemplateHelpers
 	public static function loader($helper)
 	{
 		$callback = 'Nette\Templates\TemplateHelpers::' . $helper;
-		/**/fixCallback($callback);/**/
+		fixCallback($callback);
 		if (is_callable($callback)) {
 			return $callback;
 		}
 		$callback = 'Nette\String::' . $helper;
-		/**/fixCallback($callback);/**/
+		fixCallback($callback);
 		if (is_callable($callback)) {
 			return $callback;
 		}
@@ -70,7 +69,7 @@ final class TemplateHelpers
 	 */
 	public static function escapeHtml($s)
 	{
-		if (is_object($s) && ($s instanceof ITemplate || $s instanceof /*Nette\Web\*/Html || $s instanceof /*Nette\Forms\*/Form)) {
+		if (is_object($s) && ($s instanceof ITemplate || $s instanceof Html || $s instanceof Form)) {
 			return $s->__toString(TRUE);
 		}
 		return htmlSpecialChars($s, ENT_QUOTES);
@@ -137,7 +136,7 @@ final class TemplateHelpers
 	 */
 	public static function escapeJs($s)
 	{
-		if (is_object($s) && ($s instanceof ITemplate || $s instanceof /*Nette\Web\*/Html || $s instanceof /*Nette\Forms\*/Form)) {
+		if (is_object($s) && ($s instanceof ITemplate || $s instanceof Html || $s instanceof Form)) {
 			$s = $s->__toString(TRUE);
 		}
 		return str_replace(']]>', ']]\x3E', json_encode($s));
@@ -164,7 +163,9 @@ final class TemplateHelpers
 	 */
 	public static function strip($s)
 	{
-		return trim(preg_replace('#\\s+#', ' ', $s));
+		$s = preg_replace_callback('#<(textarea|pre|script).*?</\\1#si', array(__CLASS__, 'indentCb'), $s);
+		$s = trim(preg_replace('#[ \t\r\n]+#', ' ', $s));
+		return strtr($s, "\x1F\x1E\x1D\x1A", " \t\r\n");
 	}
 
 
@@ -180,8 +181,8 @@ final class TemplateHelpers
 	{
 		if ($level >= 1) {
 			$s = preg_replace_callback('#<(textarea|pre).*?</\\1#si', array(__CLASS__, 'indentCb'), $s);
-			$s = /*Nette\*/String::indent($s, $level, $chars);
-			$s = strtr($s, "\x1D\x1A", "\r\n");
+			$s = String::indent($s, $level, $chars);
+			$s = strtr($s, "\x1F\x1E\x1D\x1A", " \t\r\n");
 		}
 		return $s;
 	}
@@ -193,7 +194,7 @@ final class TemplateHelpers
 	 */
 	private static function indentCb($m)
 	{
-		return strtr($m[0], "\r\n", "\x1D\x1A");
+		return strtr($m[0], " \t\r\n", "\x1F\x1E\x1D\x1A");
 	}
 
 
@@ -204,10 +205,18 @@ final class TemplateHelpers
 	 * @param  string
 	 * @return string
 	 */
-	public static function date($value, $format = "%x")
+	public static function date($time, $format = "%x")
 	{
-		$value = is_numeric($value) ? (int) $value : ($value instanceof /*\*/DateTime ? $value->format('U') : strtotime($value));
-		return strpos($format, '%') === FALSE ? date($format, $value) : strftime($format, $value);
+		if ($time == NULL) { // intentionally ==
+			return NULL;
+
+		} elseif (!($time instanceof DateTime)) {
+			$time = new DateTime(is_numeric($time) ? date('Y-m-d H:i:s', $time) : $time);
+		}
+
+		return strpos($format, '%') === FALSE
+			? $time->format($format) // formats using date()
+			: strftime($format, $time->format('U')); // formats according to locales
 	}
 
 
@@ -223,7 +232,7 @@ final class TemplateHelpers
 		$bytes = round($bytes);
 		$units = array('B', 'kB', 'MB', 'GB', 'TB', 'PB');
 		foreach ($units as $unit) {
-			if (abs($bytes) < 1024) break;
+			if (abs($bytes) < 1024 || $unit === end($units)) break;
 			$bytes = $bytes / 1024;
 		}
 		return round($bytes, $precision) . ' ' . $unit;

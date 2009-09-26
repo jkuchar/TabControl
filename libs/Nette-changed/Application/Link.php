@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Application
- * @version    $Id: Link.php 313 2009-05-18 17:38:47Z david@grudl.com $
  */
 
-/*namespace Nette\Application;*/
+
 
 
 
@@ -34,7 +33,7 @@ require_once dirname(__FILE__) . '/../Object.php';
  * @copyright  Copyright (c) 2004, 2009 David Grudl
  * @package    Nette\Application
  */
-class Link extends /*Nette\*/Object
+class Link extends Object
 {
 	/** @var PresenterComponent */
 	private $component;
@@ -76,11 +75,12 @@ class Link extends /*Nette\*/Object
 	 * Changes link parameter.
 	 * @param  string
 	 * @param  mixed
-	 * @return void
+	 * @return Link  provides a fluent interface
 	 */
 	public function setParam($key, $value)
 	{
 		$this->params[$key] = $value;
+		return $this;
 	}
 
 
@@ -117,7 +117,7 @@ class Link extends /*Nette\*/Object
 		try {
 			return $this->component->link($this->destination, $this->params);
 
-		} catch (/*\*/Exception $e) {
+		} catch (Exception $e) {
 			trigger_error($e->getMessage(), E_USER_WARNING);
 			return '';
 		}

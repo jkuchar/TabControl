@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette
- * @version    $Id: Configurator.php 320 2009-05-25 15:07:17Z david@grudl.com $
  */
 
-/*namespace Nette;*/
+
 
 
 
@@ -46,6 +45,7 @@ class Configurator extends Object
 		'Nette\Web\IUser' => 'Nette\Web\User',
 		'Nette\Caching\ICacheStorage' => array(__CLASS__, 'createCacheStorage'),
 		'Nette\Web\Session' => 'Nette\Web\Session',
+		'Nette\Loaders\RobotLoader' => array(__CLASS__, 'createRobotLoader'),
 	);
 
 
@@ -87,16 +87,6 @@ class Configurator extends Object
 				return TRUE;
 			}
 
-		case 'debug':
-			// Determines whether the debugger is active
-			if (defined('DEBUG_MODE')) {
-				return (bool) DEBUG_MODE;
-
-			} else {
-				return !Environment::getMode('production') && isset($_REQUEST['DBGSESSID']);
-				// function_exists('DebugBreak');
-			}
-
 		case 'console':
 			return PHP_SAPI === 'cli';
 
@@ -111,13 +101,13 @@ class Configurator extends Object
 	/**
 	 * Loads global configuration from file and process it.
 	 * @param  string|Nette\Config\Config  file name or Config object
-	 * @return Nette\Config\Config
+	 * @return Config
 	 */
 	public function loadConfig($file)
 	{
 		$name = Environment::getName();
 
-		if ($file instanceof /*Nette\Config\*/Config) {
+		if ($file instanceof Config) {
 			$config = $file;
 			$file = NULL;
 
@@ -126,11 +116,11 @@ class Configurator extends Object
 				$file = $this->defaultConfigFile;
 			}
 			$file = Environment::expand($file);
-			$config = /*Nette\Config\*/Config::fromFile($file, $name, 0);
+			$config = Config::fromFile($file, $name, 0);
 		}
 
 		// process environment variables
-		if ($config->variable instanceof /*Nette\Config\*/Config) {
+		if ($config->variable instanceof Config) {
 			foreach ($config->variable as $key => $value) {
 				Environment::setVariable($key, $value);
 			}
@@ -139,10 +129,21 @@ class Configurator extends Object
 		$config->expand();
 
 		// process services
+		$runServices = array();
 		$locator = Environment::getServiceLocator();
-		if ($config->service instanceof /*Nette\Config\*/Config) {
+		if ($config->service instanceof Config) {
 			foreach ($config->service as $key => $value) {
-				$locator->addService($value, strtr($key, '-', '\\'));
+				$key = strtr($key, '-', '\\'); // limited INI chars
+				if (is_string($value)) {
+					$locator->addService($key, $value);
+				} else {
+					if ($value->factory) {
+						$locator->addService($key, $value->factory, isset($value->singleton) ? $value->singleton : TRUE, (array) $value->option);
+					}
+					if ($value->run) {
+						$runServices[] = $key;
+					}
+				}
 			}
 		}
 
@@ -155,16 +156,30 @@ class Configurator extends Object
 		*/
 
 		// process ini settings
-		if ($config->set instanceof /*Nette\Config\*/Config) {
-			if (PATH_SEPARATOR !== ';' && isset($config->set->include_path)) {
-				$config->set->include_path = str_replace(';', PATH_SEPARATOR, $config->set->include_path);
+		if (!$config->php) { // backcompatibility
+			$config->php = $config->set;
+			unset($config->set);
+		}
+
+		if ($config->php instanceof Config) {
+			if (PATH_SEPARATOR !== ';' && isset($config->php->include_path)) {
+				$config->php->include_path = str_replace(';', PATH_SEPARATOR, $config->php->include_path);
 			}
 
-			foreach ($config->set as $key => $value) {
-				$key = strtr($key, '-', '.'); // old INI compatibility
+			foreach ($config->php as $key => $value) { // flatten INI dots
+				if ($value instanceof Config) {
+					unset($config->php->$key);
+					foreach ($value as $k => $v) {
+						$config->php->{"$key.$k"} = $v;
+					}
+				}
+			}
+
+			foreach ($config->php as $key => $value) {
+				$key = strtr($key, '-', '.'); // backcompatibility
 
 				if (!is_scalar($value)) {
-					throw new /*\*/InvalidStateException("Configuration value for directive '$key' is not scalar.");
+					throw new InvalidStateException("Configuration value for directive '$key' is not scalar.");
 				}
 
 				if (function_exists('ini_set')) {
@@ -194,7 +209,7 @@ class Configurator extends Object
 						break;
 					default:
 						if (ini_get($key) != $value) { // intentionally ==
-							throw new /*\*/NotSupportedException('Required function ini_set() is disabled.');
+							throw new NotSupportedException('Required function ini_set() is disabled.');
 						}
 					}
 				}
@@ -202,7 +217,7 @@ class Configurator extends Object
 		}
 
 		// define constants
-		if ($config->const instanceof /*Nette\Config\*/Config) {
+		if ($config->const instanceof Config) {
 			foreach ($config->const as $key => $value) {
 				define($key, $value);
 			}
@@ -213,6 +228,11 @@ class Configurator extends Object
 			foreach($config->mode as $mode => $state) {
 				Environment::setMode($mode, $state);
 			}
+		}
+
+		// auto-start services
+		foreach ($runServices as $name) {
+			$locator->getService($name);
 		}
 
 		$config->freeze();
@@ -233,7 +253,7 @@ class Configurator extends Object
 	{
 		$locator = new ServiceLocator;
 		foreach ($this->defaultServices as $name => $service) {
-			$locator->addService($service, $name);
+			$locator->addService($name, $service);
 		}
 		return $locator;
 	}
@@ -241,11 +261,27 @@ class Configurator extends Object
 
 
 	/**
-	 * @return Nette\Caching\ICacheStorage
+	 * @return ICacheStorage
 	 */
 	public static function createCacheStorage()
 	{
-		return new /*Nette\Caching\*/FileStorage(Environment::getVariable('cacheBase'));
+		return new FileStorage(Environment::getVariable('tempDir'));
+	}
+
+
+
+	/**
+	 * @return RobotLoader
+	 */
+	public static function createRobotLoader($options)
+	{
+		$loader = new RobotLoader;
+		$loader->autoRebuild = !Environment::isProduction();
+		//$loader->setCache(Environment::getCache('Nette.RobotLoader'));
+		$dirs = isset($options['directory']) ? $options['directory'] : array(Environment::getVariable('appDir'), Environment::getVariable('libsDir'));
+		$loader->addDirectory($dirs);
+		$loader->register();
+		return $loader;
 	}
 
 }

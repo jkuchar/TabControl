@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Forms
- * @version    $Id: TextArea.php 315 2009-05-24 21:20:42Z david@grudl.com $
  */
 
-/*namespace Nette\Forms;*/
+
 
 
 
@@ -55,12 +54,12 @@ class TextArea extends TextBase
 
 	/**
 	 * Generates control's HTML element.
-	 * @return Nette\Web\Html
+	 * @return Html
 	 */
 	public function getControl()
 	{
 		$control = parent::getControl();
-		$control->setText($this->value === '' ? $this->translate($this->emptyValue) : $this->tmpValue);
+		$control->setText($this->getValue() === '' ? $this->translate($this->emptyValue) : $this->value);
 		return $control;
 	}
 

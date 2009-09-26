@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Templates
- * @version    $Id: BaseTemplate.php 460 2009-07-23 16:25:19Z david@grudl.com $
  */
 
-/*namespace Nette\Templates;*/
+
 
 
 
@@ -35,7 +34,7 @@ require_once dirname(__FILE__) . '/../Templates/ITemplate.php';
  * @copyright  Copyright (c) 2004, 2009 David Grudl
  * @package    Nette\Templates
  */
-abstract class BaseTemplate extends /*Nette\*/Object implements ITemplate
+abstract class BaseTemplate extends Object implements ITemplate
 {
 	/** @var bool */
 	public $warnOnUndefined = TRUE;
@@ -64,14 +63,14 @@ abstract class BaseTemplate extends /*Nette\*/Object implements ITemplate
 	 */
 	public function registerFilter($callback)
 	{
-		/**/fixCallback($callback);/**/
+		fixCallback($callback);
 		if (!is_callable($callback)) {
 			$able = is_callable($callback, TRUE, $textual);
-			throw new /*\*/InvalidArgumentException("Filter '$textual' is not " . ($able ? 'callable.' : 'valid PHP callback.'));
+			throw new InvalidArgumentException("Filter '$textual' is not " . ($able ? 'callable.' : 'valid PHP callback.'));
 		}
 		if (in_array($callback, $this->filters)) {
 			is_callable($callback, TRUE, $textual);
-			throw new /*\*/InvalidStateException("Filter '$textual' was registered twice.");
+			throw new InvalidStateException("Filter '$textual' was registered twice.");
 		}
 		$this->filters[] = $callback;
 	}
@@ -116,7 +115,7 @@ abstract class BaseTemplate extends /*Nette\*/Object implements ITemplate
 			$this->render();
 			return ob_get_clean();
 
-		} catch (/*\*/Exception $e) {
+		} catch (Exception $e) {
 			ob_end_clean();
 			if (func_num_args() && func_get_arg(0)) {
 				throw $e;
@@ -149,7 +148,7 @@ abstract class BaseTemplate extends /*Nette\*/Object implements ITemplate
 			}
 		} catch (Exception $e) {
 			is_callable($filter, TRUE, $textual);
-			throw new /*\*/InvalidStateException("Filter $textual: " . $e->getMessage() . ($label ? " (in $label)" : ''), 0, $e);
+			throw new InvalidStateException("Filter $textual: " . $e->getMessage() . ($label ? " (in $label)" : ''), 0, $e);
 		}
 
 		if ($label) {
@@ -173,10 +172,10 @@ abstract class BaseTemplate extends /*Nette\*/Object implements ITemplate
 	 */
 	public function registerHelper($name, $callback)
 	{
-		/**/fixCallback($callback);/**/
+		fixCallback($callback);
 		if (!is_callable($callback)) {
 			$able = is_callable($callback, TRUE, $textual);
-			throw new /*\*/InvalidArgumentException("Helper handler '$textual' is not " . ($able ? 'callable.' : 'valid PHP callback.'));
+			throw new InvalidArgumentException("Helper handler '$textual' is not " . ($able ? 'callable.' : 'valid PHP callback.'));
 		}
 		$this->helpers[strtolower($name)] = $callback;
 	}
@@ -190,10 +189,10 @@ abstract class BaseTemplate extends /*Nette\*/Object implements ITemplate
 	 */
 	public function registerHelperLoader($callback)
 	{
-		/**/fixCallback($callback);/**/
+		fixCallback($callback);
 		if (!is_callable($callback)) {
 			$able = is_callable($callback, TRUE, $textual);
-			throw new /*\*/InvalidArgumentException("Helper loader '$textual' is not " . ($able ? 'callable.' : 'valid PHP callback.'));
+			throw new InvalidArgumentException("Helper loader '$textual' is not " . ($able ? 'callable.' : 'valid PHP callback.'));
 		}
 		$this->helperLoaders[] = $callback;
 	}
@@ -238,12 +237,13 @@ abstract class BaseTemplate extends /*Nette\*/Object implements ITemplate
 
 	/**
 	 * Sets translate adapter.
-	 * @param  Nette\ITranslator
-	 * @return void
+	 * @param  ITranslator
+	 * @return BaseTemplate  provides a fluent interface
 	 */
-	public function setTranslator(/*Nette\*/ITranslator $translator = NULL)
+	public function setTranslator(ITranslator $translator = NULL)
 	{
 		$this->registerHelper('translate', $translator === NULL ? NULL : array($translator, 'translate'));
+		return $this;
 	}
 
 
@@ -261,7 +261,7 @@ abstract class BaseTemplate extends /*Nette\*/Object implements ITemplate
 	public function add($name, $value)
 	{
 		if (array_key_exists($name, $this->params)) {
-			throw new /*\*/InvalidStateException("The variable '$name' exists yet.");
+			throw new InvalidStateException("The variable '$name' exists yet.");
 		}
 
 		$this->params[$name] = $value;
@@ -272,11 +272,12 @@ abstract class BaseTemplate extends /*Nette\*/Object implements ITemplate
 	/**
 	 * Sets all parameters.
 	 * @param  array
-	 * @return void
+	 * @return BaseTemplate  provides a fluent interface
 	 */
 	public function setParams(array $params)
 	{
 		$this->params = $params;
+		return $this;
 	}
 
 
@@ -354,7 +355,7 @@ abstract class BaseTemplate extends /*Nette\*/Object implements ITemplate
 	 * @param  string
 	 * @param  array
 	 * @return string
-	*/
+	 */
 	private static function extractPhp($source, & $blocks)
 	{
 		$res = '';
@@ -384,37 +385,47 @@ abstract class BaseTemplate extends /*Nette\*/Object implements ITemplate
 	 * Removes unnecessary blocks of PHP code.
 	 * @param  string
 	 * @return string
-	*/
-	private static function optimizePhp($source)
+	 */
+	public static function optimizePhp($source)
 	{
 		$res = $php = '';
-		$tokens = token_get_all($source);
-		$iterator = new /*Nette\*/SmartCachingIterator(token_get_all($source));
-		foreach ($iterator as $token) {
+		$lastChar = ';';
+		$tokens = new ArrayIterator(token_get_all($source));
+		foreach ($tokens as $key => $token) {
 			if (is_array($token)) {
 				if ($token[0] === T_INLINE_HTML) {
+					$lastChar = '';
 					$res .= $token[1];
 
 				} elseif ($token[0] === T_CLOSE_TAG) {
-					$next = $iterator->getNextValue();
+					$next = isset($tokens[$key + 1]) ? $tokens[$key + 1] : NULL;
 					if (substr($res, -1) !== '<' && preg_match('#^<\?php\s*$#', $php)) {
 						$php = ''; // removes empty (?php ?), but retains ((?php ?)?php
 
 					} elseif (is_array($next) && $next[0] === T_OPEN_TAG) { // remove ?)(?php
-						$ch = substr(rtrim($php), -1);
-						if ($ch !== ';' && $ch !== '{' && $ch !== '}' && $ch !== ':' && $ch !== '/') $php .= ';';
+						if ($lastChar !== ';' && $lastChar !== '{' && $lastChar !== '}' && $lastChar !== ':' && $lastChar !== '/' ) $php .= $lastChar = ';';
 						if (substr($next[1], -1) === "\n") $php .= "\n";
-						$iterator->next();
+						$tokens->next();
 
-					} else {
+					} elseif ($next) {
 						$res .= preg_replace('#;?(\s)*$#', '$1', $php) . $token[1]; // remove last semicolon before ?)
 						$php = '';
+
+					} else { // remove last ?)
+						if ($lastChar !== '}' && $lastChar !== ';') $php .= ';';
 					}
+
+				} elseif ($token[0] === T_ELSE || $token[0] === T_ELSEIF) {
+					if ($tokens[$key + 1] === ':' && $lastChar === '}') $php .= ';'; // semicolon needed in if(): ... if() ... else:
+					$lastChar = '';
+					$php .= $token[1];
+
 				} else {
+					if (!in_array($token[0], array(T_WHITESPACE, T_COMMENT, T_DOC_COMMENT, T_OPEN_TAG))) $lastChar = '';
 					$php .= $token[1];
 				}
 			} else {
-				$php .= $token;
+				$php .= $lastChar = $token;
 			}
 		}
 		return $res . $php;

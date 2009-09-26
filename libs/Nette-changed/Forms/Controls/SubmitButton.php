@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Forms
- * @version    $Id: SubmitButton.php 368 2009-06-25 14:26:59Z david@grudl.com $
  */
 
-/*namespace Nette\Forms;*/
+
 
 
 
@@ -63,12 +62,30 @@ class SubmitButton extends Button implements ISubmitterControl
 
 
 	/**
+	 * Sets 'pressed' indicator.
+	 * @param  bool
+	 * @return SubmitButton  provides a fluent interface
+	 */
+	public function setValue($value)
+	{
+		$this->value = is_scalar($value) && (bool) $value;
+		$form = $this->getForm();
+		if ($this->value || !is_object($form->isSubmitted())) {
+			$this->value = TRUE;
+			$form->setSubmittedBy($this);
+		}
+		return $this;
+	}
+
+
+
+	/**
 	 * Tells if the form was submitted by this button.
 	 * @return bool
 	 */
 	public function isSubmittedBy()
 	{
-		return (bool) $this->value;
+		return $this->getForm()->isSubmitted() === $this;
 	}
 
 

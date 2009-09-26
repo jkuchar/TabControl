@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Forms
- * @version    $Id: InstantClientScript.php 460 2009-07-23 16:25:19Z david@grudl.com $
  */
 
-/*namespace Nette\Forms;*/
+
 
 
 
@@ -33,7 +32,7 @@ require_once dirname(__FILE__) . '/../../Object.php';
  * @copyright  Copyright (c) 2004, 2009 David Grudl
  * @package    Nette\Forms
  */
-final class InstantClientScript extends /*Nette\*/Object
+final class InstantClientScript extends Object
 {
 	/** @var string  JavaScript event handler name */
 	public $validateFunction;
@@ -285,7 +284,7 @@ final class InstantClientScript extends /*Nette\*/Object
 
 		case $operation === ':regexp' && $control instanceof TextBase:
 			if (strncmp($arg, '/', 1)) {
-				throw new /*\*/InvalidStateException("Regular expression '$arg' must be JavaScript compatible.");
+				throw new InvalidStateException("Regular expression '$arg' must be JavaScript compatible.");
 			}
 			return $this->getValueScript($control) . "res = $arg.test(val);";
 

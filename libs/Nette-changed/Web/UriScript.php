@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Web
- * @version    $Id: UriScript.php 363 2009-06-22 14:27:11Z david@grudl.com $
  */
 
-/*namespace Nette\Web;*/
+
 
 
 
@@ -65,12 +64,13 @@ class UriScript extends Uri
 	/**
 	 * Sets the script-path part of URI.
 	 * @param  string
-	 * @return void
+	 * @return UriScript  provides a fluent interface
 	 */
 	public function setScriptPath($value)
 	{
 		$this->updating();
 		$this->scriptPath = (string) $value;
+		return $this;
 	}
 
 

@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Security
- * @version    $Id: SimpleAuthenticator.php 182 2008-12-31 00:28:33Z david@grudl.com $
  */
 
-/*namespace Nette\Security;*/
+
 
 
 
@@ -39,7 +38,7 @@ require_once dirname(__FILE__) . '/../Security/AuthenticationException.php';
  * @copyright  Copyright (c) 2004, 2009 David Grudl
  * @package    Nette\Security
  */
-class SimpleAuthenticator extends /*Nette\*/Object implements IAuthenticator
+class SimpleAuthenticator extends Object implements IAuthenticator
 {
 	/** @var array */
 	private $userlist;

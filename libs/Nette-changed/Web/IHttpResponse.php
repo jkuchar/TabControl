@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Web
- * @version    $Id: IHttpResponse.php 434 2009-07-18 18:43:49Z david@grudl.com $
  */
 
-/*namespace Nette\Web;*/
+
 
 
 
@@ -52,6 +51,7 @@ interface IHttpResponse
 		S401_UNAUTHORIZED = 401,
 		S403_FORBIDDEN = 403,
 		S404_NOT_FOUND = 404,
+		S405_METHOD_NOT_ALLOWED = 405,
 		S410_GONE = 410,
 		S500_INTERNAL_SERVER_ERROR = 500,
 		S501_NOT_IMPLEMENTED = 501,

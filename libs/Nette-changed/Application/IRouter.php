@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Application
- * @version    $Id: IRouter.php 185 2009-01-09 00:22:52Z david@grudl.com $
  */
 
-/*namespace Nette\Application;*/
+
 
 
 
@@ -38,17 +37,17 @@ interface IRouter
 
 	/**
 	 * Maps HTTP request to a PresenterRequest object.
-	 * @param  Nette\Web\IHttpRequest
+	 * @param  IHttpRequest
 	 * @return PresenterRequest|NULL
 	 */
-	function match(/*Nette\Web\*/IHttpRequest $httpRequest);
+	function match(IHttpRequest $httpRequest);
 
 	/**
 	 * Constructs absolute URL from PresenterRequest object.
-	 * @param  Nette\Web\IHttpRequest
+	 * @param  IHttpRequest
 	 * @param  PresenterRequest
 	 * @return string|NULL
 	 */
-	function constructUrl(PresenterRequest $appRequest, /*Nette\Web\*/IHttpRequest $httpRequest);
+	function constructUrl(PresenterRequest $appRequest, IHttpRequest $httpRequest);
 
 }

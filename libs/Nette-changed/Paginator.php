@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette
- * @version    $Id: Paginator.php 329 2009-05-28 20:18:49Z david@grudl.com $
  */
 
-/*namespace Nette;*/
+
 
 
 
@@ -61,11 +60,12 @@ class Paginator extends Object
 	/**
 	 * Sets current page number.
 	 * @param  int
-	 * @return void
+	 * @return Paginator  provides a fluent interface
 	 */
 	public function setPage($page)
 	{
 		$this->page = (int) $page;
+		return $this;
 	}
 
 
@@ -106,11 +106,12 @@ class Paginator extends Object
 	/**
 	 * Sets first page (base) number.
 	 * @param  int
-	 * @return void
+	 * @return Paginator  provides a fluent interface
 	 */
 	public function setBase($base)
 	{
 		$this->base = (int) $base;
+		return $this;
 	}
 
 
@@ -173,11 +174,12 @@ class Paginator extends Object
 	/**
 	 * Sets the number of items to display on a single page.
 	 * @param  int
-	 * @return void
+	 * @return Paginator  provides a fluent interface
 	 */
 	public function setItemsPerPage($itemsPerPage)
 	{
 		$this->itemsPerPage = max(1, (int) $itemsPerPage);
+		return $this;
 	}
 
 
@@ -196,11 +198,12 @@ class Paginator extends Object
 	/**
 	 * Sets the total number of items.
 	 * @param  int (or FALSE as infinity)
-	 * @return void
+	 * @return Paginator  provides a fluent interface
 	 */
 	public function setItemCount($itemCount)
 	{
 		$this->itemCount = $itemCount === FALSE ? PHP_INT_MAX : max(0, (int) $itemCount);
+		return $this;
 	}
 
 

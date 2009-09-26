@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Loaders
- * @version    $Id: SimpleLoader.php 182 2008-12-31 00:28:33Z david@grudl.com $
  */
 
-/*namespace Nette\Loaders;*/
+
 
 
 
@@ -44,7 +43,7 @@ class SimpleLoader extends AutoLoader
 	public function tryLoad($type)
 	{
 		if (strpbrk($type, './;|') !== FALSE) {
-			throw new /*\*/InvalidArgumentException("Invalid class/interface name '$type'.");
+			throw new InvalidArgumentException("Invalid class/interface name '$type'.");
 		}
 
 		$file = strtr($type, '\\', '/') . '.php';

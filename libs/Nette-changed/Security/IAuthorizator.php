@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Security
- * @version    $Id: IAuthorizator.php 230 2009-03-19 12:16:22Z david@grudl.com $
  */
 
-/*namespace Nette\Security;*/
+
 
 
 

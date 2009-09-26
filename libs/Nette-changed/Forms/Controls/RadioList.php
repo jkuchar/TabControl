@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Forms
- * @version    $Id: RadioList.php 329 2009-05-28 20:18:49Z david@grudl.com $
  */
 
-/*namespace Nette\Forms;*/
+
 
 
 
@@ -34,15 +33,15 @@ require_once dirname(__FILE__) . '/../../Forms/Controls/FormControl.php';
  * @package    Nette\Forms
  *
  * @property   array $items
- * @property-read Nette\Web\Html $separatorPrototype
- * @property-read Nette\Web\Html $containerPrototype
+ * @property-read Html $separatorPrototype
+ * @property-read Html $containerPrototype
  */
 class RadioList extends FormControl
 {
-	/** @var Nette\Web\Html  separator element template */
+	/** @var Html  separator element template */
 	protected $separator;
 
-	/** @var Nette\Web\Html  container element template */
+	/** @var Html  container element template */
 	protected $container;
 
 	/** @var array */
@@ -58,8 +57,8 @@ class RadioList extends FormControl
 	{
 		parent::__construct($label);
 		$this->control->type = 'radio';
-		$this->container = /*Nette\Web\*/Html::el();
-		$this->separator = /*Nette\Web\*/Html::el('br');
+		$this->container = Html::el();
+		$this->separator = Html::el('br');
 		if ($items !== NULL) $this->setItems($items);
 	}
 
@@ -103,7 +102,7 @@ class RadioList extends FormControl
 
 	/**
 	 * Returns separator HTML element template.
-	 * @return Nette\Web\Html
+	 * @return Html
 	 */
 	final public function getSeparatorPrototype()
 	{
@@ -114,7 +113,7 @@ class RadioList extends FormControl
 
 	/**
 	 * Returns container HTML element template.
-	 * @return Nette\Web\Html
+	 * @return Html
 	 */
 	final public function getContainerPrototype()
 	{
@@ -126,7 +125,7 @@ class RadioList extends FormControl
 	/**
 	 * Generates control's HTML element.
 	 * @param  mixed
-	 * @return Nette\Web\Html
+	 * @return Html
 	 */
 	public function getControl($key = NULL)
 	{
@@ -142,7 +141,7 @@ class RadioList extends FormControl
 		$id = $control->id;
 		$counter = -1;
 		$value = $this->value === NULL ? NULL : (string) $this->getValue();
-		$label = /*Nette\Web\*/Html::el('label');
+		$label = Html::el('label');
 
 		foreach ($this->items as $k => $val) {
 			$counter++;
@@ -152,7 +151,7 @@ class RadioList extends FormControl
 			$control->checked = (string) $k === $value;
 			$control->value = $k;
 
-			if ($val instanceof /*Nette\Web\*/Html) {
+			if ($val instanceof Html) {
 				$label->setHtml($val);
 			} else {
 				$label->setText($this->translate($val));
@@ -173,11 +172,12 @@ class RadioList extends FormControl
 
 	/**
 	 * Generates label's HTML element.
+	 * @param  string
 	 * @return void
 	 */
-	public function getLabel()
+	public function getLabel($caption = NULL)
 	{
-		$label = parent::getLabel();
+		$label = parent::getLabel($caption);
 		$label->for = NULL;
 		return $label;
 	}

@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette
- * @version    $Id: Object.php 329 2009-05-28 20:18:49Z david@grudl.com $
  */
 
-/*namespace Nette;*/
+
 
 
 
@@ -69,7 +68,7 @@ require_once dirname(__FILE__) . '/ObjectMixin.php';
  * @package    Nette
  *
  * @property-read string $class
- * @property-read \ReflectionObject $reflection
+ * @property-read ReflectionObject $reflection
  */
 abstract class Object
 {
@@ -79,9 +78,9 @@ abstract class Object
 	 *
 	 * @return string
 	 */
-	final public /*static*/ function getClass()
+	final public  function getClass()
 	{
-		return /*get_called_class()*/ /**/get_class($this)/**/;
+		return  get_class($this);
 	}
 
 
@@ -89,11 +88,11 @@ abstract class Object
 	/**
 	 * Access to reflection.
 	 *
-	 * @return \ReflectionObject
+	 * @return ReflectionObject
 	 */
 	final public function getReflection()
 	{
-		return new /*\*/ReflectionObject($this);
+		return new ReflectionObject($this);
 	}
 
 
@@ -104,7 +103,7 @@ abstract class Object
 	 * @param  string  method name
 	 * @param  array   arguments
 	 * @return mixed
-	 * @throws \MemberAccessException
+	 * @throws MemberAccessException
 	 */
 	public function __call($name, $args)
 	{
@@ -119,12 +118,12 @@ abstract class Object
 	 * @param  string  method name (in lower case!)
 	 * @param  array   arguments
 	 * @return mixed
-	 * @throws \MemberAccessException
+	 * @throws MemberAccessException
 	 */
 	public static function __callStatic($name, $args)
 	{
 		$class = get_called_class();
-		throw new /*\*/MemberAccessException("Call to undefined static method $class::$name().");
+		throw new MemberAccessException("Call to undefined static method $class::$name().");
 	}
 
 
@@ -153,7 +152,7 @@ abstract class Object
 	 *
 	 * @param  string  property name
 	 * @return mixed   property value
-	 * @throws \MemberAccessException if the property is not defined.
+	 * @throws MemberAccessException if the property is not defined.
 	 */
 	public function &__get($name)
 	{
@@ -168,7 +167,7 @@ abstract class Object
 	 * @param  string  property name
 	 * @param  mixed   property value
 	 * @return void
-	 * @throws \MemberAccessException if the property is not defined or is read-only
+	 * @throws MemberAccessException if the property is not defined or is read-only
 	 */
 	public function __set($name, $value)
 	{
@@ -195,11 +194,11 @@ abstract class Object
 	 *
 	 * @param  string  property name
 	 * @return void
-	 * @throws \MemberAccessException
+	 * @throws MemberAccessException
 	 */
 	public function __unset($name)
 	{
-		throw new /*\*/MemberAccessException("Cannot unset the property $this->class::\$$name.");
+		throw new MemberAccessException("Cannot unset the property $this->class::\$$name.");
 	}
 
 }

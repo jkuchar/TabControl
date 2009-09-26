@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Web
- * @version    $Id: Uri.php 475 2009-08-04 10:44:08Z david@grudl.com $
  */
 
-/*namespace Nette\Web;*/
+
 
 
 
@@ -55,7 +54,7 @@ require_once dirname(__FILE__) . '/../FreezableObject.php';
  * @property-read string $authority
  * @property-read string $hostUri
  */
-class Uri extends /*Nette\*/FreezableObject
+class Uri extends FreezableObject
 {
 	/** @var array */
 	public static $defaultPorts = array(
@@ -101,7 +100,7 @@ class Uri extends /*Nette\*/FreezableObject
 		if (is_string($uri)) {
 			$parts = @parse_url($uri); // intentionally @
 			if ($parts === FALSE) {
-				throw new /*\*/InvalidArgumentException("Malformed or unsupported URI '$uri'.");
+				throw new InvalidArgumentException("Malformed or unsupported URI '$uri'.");
 			}
 
 			foreach ($parts as $key => $val) {
@@ -124,12 +123,13 @@ class Uri extends /*Nette\*/FreezableObject
 	/**
 	 * Sets the scheme part of URI.
 	 * @param  string
-	 * @return void
+	 * @return Uri  provides a fluent interface
 	 */
 	public function setScheme($value)
 	{
 		$this->updating();
 		$this->scheme = (string) $value;
+		return $this;
 	}
 
 
@@ -148,12 +148,13 @@ class Uri extends /*Nette\*/FreezableObject
 	/**
 	 * Sets the user name part of URI.
 	 * @param  string
-	 * @return void
+	 * @return Uri  provides a fluent interface
 	 */
 	public function setUser($value)
 	{
 		$this->updating();
 		$this->user = (string) $value;
+		return $this;
 	}
 
 
@@ -172,12 +173,13 @@ class Uri extends /*Nette\*/FreezableObject
 	/**
 	 * Sets the password part of URI.
 	 * @param  string
-	 * @return void
+	 * @return Uri  provides a fluent interface
 	 */
 	public function setPassword($value)
 	{
 		$this->updating();
 		$this->pass = (string) $value;
+		return $this;
 	}
 
 
@@ -216,12 +218,13 @@ class Uri extends /*Nette\*/FreezableObject
 	/**
 	 * Sets the host part of URI.
 	 * @param  string
-	 * @return void
+	 * @return Uri  provides a fluent interface
 	 */
 	public function setHost($value)
 	{
 		$this->updating();
 		$this->host = (string) $value;
+		return $this;
 	}
 
 
@@ -240,12 +243,13 @@ class Uri extends /*Nette\*/FreezableObject
 	/**
 	 * Sets the port part of URI.
 	 * @param  string
-	 * @return void
+	 * @return Uri  provides a fluent interface
 	 */
 	public function setPort($value)
 	{
 		$this->updating();
 		$this->port = (int) $value;
+		return $this;
 	}
 
 
@@ -264,12 +268,13 @@ class Uri extends /*Nette\*/FreezableObject
 	/**
 	 * Sets the path part of URI.
 	 * @param  string
-	 * @return void
+	 * @return Uri  provides a fluent interface
 	 */
 	public function setPath($value)
 	{
 		$this->updating();
 		$this->path = (string) $value;
+		return $this;
 	}
 
 
@@ -288,13 +293,13 @@ class Uri extends /*Nette\*/FreezableObject
 	/**
 	 * Sets the query part of URI.
 	 * @param  string|array
-	 * @return void
+	 * @return Uri  provides a fluent interface
 	 */
 	public function setQuery($value)
 	{
 		$this->updating();
 		$this->query = (string) (is_array($value) ? http_build_query($value, '', '&') : $value);
-
+		return $this;
 	}
 
 
@@ -327,12 +332,13 @@ class Uri extends /*Nette\*/FreezableObject
 	/**
 	 * Sets the fragment part of URI.
 	 * @param  string
-	 * @return void
+	 * @return Uri  provides a fluent interface
 	 */
 	public function setFragment($value)
 	{
 		$this->updating();
 		$this->fragment = (string) $value;
+		return $this;
 	}
 
 
@@ -414,7 +420,7 @@ class Uri extends /*Nette\*/FreezableObject
 		// compare query strings
 		$part = (string) strtok('?#');
 		if ($part !== '') {
-			$tmp = preg_split('#[&;]#', self::unescape(strtr($part, '+', ' '), '%&;'));
+			$tmp = preg_split('#[&;]#', self::unescape(strtr($part, '+', ' '), '%&;=+'));
 			sort($tmp);
 			$part = implode('&', $tmp);
 		}

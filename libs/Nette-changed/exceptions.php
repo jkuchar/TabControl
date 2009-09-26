@@ -15,7 +15,6 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette
- * @version    $Id: exceptions.php 297 2009-05-03 10:42:21Z david@grudl.com $
  */
 
 // no namespace
@@ -57,7 +56,7 @@ class ArgumentOutOfRangeException extends InvalidArgumentException
  */
 class InvalidStateException extends RuntimeException
 {
-	/**/
+	
 	function __construct($message = '', $code = 0, Exception $previous = NULL)
 	{
 		if (version_compare(PHP_VERSION , '5.3', '<')) {
@@ -67,7 +66,7 @@ class InvalidStateException extends RuntimeException
 			parent::__construct($message, $code, $previous);
 		}
 	}
-	/**/
+	
 }
 
 
@@ -148,28 +147,28 @@ class DirectoryNotFoundException extends IOException
  * the script should be halted.
  * @package    Nette
  */
-class FatalErrorException extends /*Error*/Exception
+class FatalErrorException extends Exception
 {
-	/**//** @var int */
+	/** @var int */
 	private $severity;
-	/**/
+	
 
 	public function __construct($message, $code, $severity, $file, $line, $context)
 	{
-		/*parent::__construct($message, $code, $severity, $file, $line);*/
-		/**/parent::__construct($message, $code);
+		
+		parent::__construct($message, $code);
 		$this->severity = $severity;
 		$this->file = $file;
-		$this->line = $line;/**/
+		$this->line = $line;
 		$this->context = $context;
 	}
 
 
-	/**/
+	
 	public function getSeverity()
 	{
 		return $this->severity;
 	}
-	/**/
+	
 
 }

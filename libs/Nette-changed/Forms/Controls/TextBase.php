@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Forms
- * @version    $Id: TextBase.php 401 2009-07-08 13:58:44Z david@grudl.com $
  */
 
-/*namespace Nette\Forms;*/
+
 
 
 
@@ -40,9 +39,6 @@ abstract class TextBase extends FormControl
 	/** @var string */
 	protected $emptyValue = '';
 
-	/** @var string */
-	protected $tmpValue;
-
 	/** @var array */
 	protected $filters = array();
 
@@ -51,29 +47,27 @@ abstract class TextBase extends FormControl
 	/**
 	 * Sets control's value.
 	 * @param  string
-	 * @return void
+	 * @return TextBase  provides a fluent interface
 	 */
 	public function setValue($value)
 	{
-		$value = (string) $value;
-		foreach ($this->filters as $filter) {
-			$value = (string) call_user_func($filter, $value);
-		}
-		$this->tmpValue = $this->value = $value === $this->translate($this->emptyValue) ? '' : $value;
+		$this->value = is_scalar($value) ? (string) $value : '';
+		return $this;
 	}
 
 
 
 	/**
-	 * Loads HTTP data.
-	 * @param  array
-	 * @return void
+	 * Returns control's value.
+	 * @return string
 	 */
-	public function loadHttpData($data)
+	public function getValue()
 	{
-		$name = $this->getName();
-		$this->tmpValue = isset($data[$name]) && is_scalar($data[$name]) ? $data[$name] : NULL;
-		$this->setValue($this->tmpValue);
+		$value = $this->value;
+		foreach ($this->filters as $filter) {
+			$value = (string) call_user_func($filter, $value);
+		}
+		return $value === $this->translate($this->emptyValue) ? '' : $value;
 	}
 
 
@@ -109,10 +103,10 @@ abstract class TextBase extends FormControl
 	 */
 	public function addFilter($filter)
 	{
-		/**/fixCallback($filter);/**/
+		fixCallback($filter);
 		if (!is_callable($filter)) {
 			$able = is_callable($filter, TRUE, $textual);
-			throw new /*\*/InvalidArgumentException("Filter '$textual' is not " . ($able ? 'callable.' : 'valid PHP callback.'));
+			throw new InvalidArgumentException("Filter '$textual' is not " . ($able ? 'callable.' : 'valid PHP callback.'));
 		}
 		$this->filters[] = $filter;
 		return $this;

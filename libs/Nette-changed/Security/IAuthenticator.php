@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Security
- * @version    $Id: IAuthenticator.php 182 2008-12-31 00:28:33Z david@grudl.com $
  */
 
-/*namespace Nette\Security;*/
+
 
 
 
@@ -40,6 +39,7 @@ interface IAuthenticator
 	const IDENTITY_NOT_FOUND = 1;
 	const INVALID_CREDENTIAL = 2;
 	const FAILURE = 3;
+	const NOT_APPROVED = 4;
 	/**#@-*/
 
 	/**

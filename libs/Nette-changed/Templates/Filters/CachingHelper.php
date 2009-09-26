@@ -15,12 +15,11 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Templates
- * @version    $Id: CachingHelper.php 182 2008-12-31 00:28:33Z david@grudl.com $
  */
 
-/*namespace Nette\Templates;*/
 
-/*use Nette\Caching\Cache, Nette\Environment;*/
+
+
 
 
 
@@ -35,7 +34,7 @@ require_once dirname(__FILE__) . '/../../Object.php';
  * @copyright  Copyright (c) 2004, 2009 David Grudl
  * @package    Nette\Templates
  */
-class CachingHelper extends /*Nette\*/Object
+class CachingHelper extends Object
 {
 	/** @var array */
 	private $frame;
@@ -115,11 +114,11 @@ class CachingHelper extends /*Nette\*/Object
 
 
 	/**
-	 * @return Nette\Caching\Cache
+	 * @return Cache
 	 */
 	protected static function getCache()
 	{
-		return /*Nette\*/Environment::getCache('Nette.Template.Curly');
+		return Environment::getCache('Nette.Template.Curly');
 	}
 
 }

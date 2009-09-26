@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette
- * @version    $Id: ITranslator.php 186 2009-01-10 00:05:39Z david@grudl.com $
  */
 
-/*namespace Nette;*/
+
 
 
 

@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Forms
- * @version    $Id: FormContainer.php 329 2009-05-28 20:18:49Z david@grudl.com $
  */
 
-/*namespace Nette\Forms;*/
+
 
 
 
@@ -35,23 +34,159 @@ require_once dirname(__FILE__) . '/../Forms/INamingContainer.php';
  * @copyright  Copyright (c) 2004, 2009 David Grudl
  * @package    Nette\Forms
  *
- * @property-read \ArrayIterator $controls
+ * @property-read ArrayIterator $controls
  * @property-read Form $form
+ * @property-read bool $valid
+ * @property   array $values
  */
-class FormContainer extends /*Nette\*/ComponentContainer implements /*\*/ArrayAccess, INamingContainer
+class FormContainer extends ComponentContainer implements ArrayAccess, INamingContainer
 {
 	/** @var FormGroup */
 	protected $currentGroup;
+
+	/** @var bool */
+	protected $valid;
+
+
+
+	/********************* data exchange ****************d*g**/
+
+
+
+	/**
+	 * Fill-in with default values.
+	 * @param  array|Traversable  values used to fill the form
+	 * @param  bool     erase other default values?
+	 * @return FormContainer  provides a fluent interface
+	 */
+	public function setDefaults($values, $erase = FALSE)
+	{
+		$form = $this->getForm(FALSE);
+		if (!$form || !$form->isAnchored() || !$form->isSubmitted()) {
+			$this->setValues($values, $erase);
+		}
+		return $this;
+	}
+
+
+
+	/**
+	 * Fill-in with values.
+	 * @param  array|Traversable  values used to fill the form
+	 * @param  bool     erase other controls?
+	 * @return FormContainer  provides a fluent interface
+	 */
+	public function setValues($values, $erase = FALSE)
+	{
+		if ($values instanceof Traversable) {
+			$values = iterator_to_array($values);
+
+		} elseif (!is_array($values)) {
+			throw new InvalidArgumentException("Values must be an array, " . gettype($values) ." given.");
+		}
+
+		$cursor = & $values;
+		$iterator = $this->getComponents(TRUE);
+		foreach ($iterator as $name => $control) {
+			$sub = $iterator->getSubIterator();
+			if (!isset($sub->cursor)) {
+				$sub->cursor = & $cursor;
+			}
+			if ($control instanceof IFormControl) {
+				if ((is_array($sub->cursor) || $sub->cursor instanceof ArrayAccess) && array_key_exists($name, $sub->cursor)) {
+					$control->setValue($sub->cursor[$name]);
+
+				} elseif ($erase) {
+					$control->setValue(NULL);
+				}
+			}
+			if ($control instanceof INamingContainer) {
+				if ((is_array($sub->cursor) || $sub->cursor instanceof ArrayAccess) && isset($sub->cursor[$name])) {
+					$cursor = & $sub->cursor[$name];
+				} else {
+					unset($cursor);
+					$cursor = NULL;
+				}
+			}
+		}
+		return $this;
+	}
+
+
+
+	/**
+	 * Returns the values submitted by the form.
+	 * @return array
+	 */
+	public function getValues()
+	{
+		$values = array();
+		$cursor = & $values;
+		$iterator = $this->getComponents(TRUE);
+		foreach ($iterator as $name => $control) {
+			$sub = $iterator->getSubIterator();
+			if (!isset($sub->cursor)) {
+				$sub->cursor = & $cursor;
+			}
+			if ($control instanceof IFormControl && !$control->isDisabled() && !($control instanceof ISubmitterControl)) {
+				$sub->cursor[$name] = $control->getValue();
+			}
+			if ($control instanceof INamingContainer) {
+				$cursor = & $sub->cursor[$name];
+				$cursor = array();
+			}
+		}
+		return $values;
+	}
+
+
+
+	/********************* validation ****************d*g**/
+
+
+
+	/**
+	 * Is form valid?
+	 * @return bool
+	 */
+	public function isValid()
+	{
+		if ($this->valid === NULL) {
+			$this->validate();
+		}
+		return $this->valid;
+	}
+
+
+
+	/**
+	 * Performs the server side validation.
+	 * @return void
+	 */
+	public function validate()
+	{
+		$this->valid = TRUE;
+		foreach ($this->getControls() as $control) {
+			if (!$control->getRules()->validate()) {
+				$this->valid = FALSE;
+			}
+		}
+	}
+
+
+
+	/********************* form building ****************d*g**/
 
 
 
 	/**
 	 * @param  FormGroup
-	 * @return void
+	 * @return FormContainer  provides a fluent interface
 	 */
 	public function setCurrentGroup(FormGroup $group = NULL)
 	{
 		$this->currentGroup = $group;
+		return $this;
 	}
 
 
@@ -62,9 +197,9 @@ class FormContainer extends /*Nette\*/ComponentContainer implements /*\*/ArrayAc
 	 * @param  string
 	 * @param  string
 	 * @return void
-	 * @throws \InvalidStateException
+	 * @throws InvalidStateException
 	 */
-	public function addComponent(/*Nette\*/IComponent $component, $name, $insertBefore = NULL)
+	public function addComponent(IComponent $component, $name, $insertBefore = NULL)
 	{
 		parent::addComponent($component, $name, $insertBefore);
 		if ($this->currentGroup !== NULL && $component instanceof IFormControl) {
@@ -76,7 +211,7 @@ class FormContainer extends /*Nette\*/ComponentContainer implements /*\*/ArrayAc
 
 	/**
 	 * Iterates over all form controls.
-	 * @return \ArrayIterator
+	 * @return ArrayIterator
 	 */
 	public function getControls()
 	{
@@ -304,7 +439,7 @@ class FormContainer extends /*Nette\*/ComponentContainer implements /*\*/ArrayAc
 	/**
 	 * Adds the component to the container.
 	 * @param  string  component name
-	 * @param  Nette\IComponent
+	 * @param  IComponent
 	 * @return void.
 	 */
 	final public function offsetSet($name, $component)
@@ -317,8 +452,8 @@ class FormContainer extends /*Nette\*/ComponentContainer implements /*\*/ArrayAc
 	/**
 	 * Returns component specified by name. Throws exception if component doesn't exist.
 	 * @param  string  component name
-	 * @return Nette\IComponent
-	 * @throws \InvalidArgumentException
+	 * @return IComponent
+	 * @throws InvalidArgumentException
 	 */
 	final public function offsetGet($name)
 	{

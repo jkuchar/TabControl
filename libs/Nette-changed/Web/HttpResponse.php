@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Web
- * @version    $Id: HttpResponse.php 438 2009-07-20 12:56:04Z david@grudl.com $
  */
 
-/*namespace Nette\Web;*/
+
 
 
 
@@ -39,7 +38,7 @@ require_once dirname(__FILE__) . '/../Web/IHttpResponse.php';
  * @property-read array $headers
  * @property-read mixed $sent
  */
-final class HttpResponse extends /*Nette\*/Object implements IHttpResponse
+final class HttpResponse extends Object implements IHttpResponse
 {
 	/** @var bool  Send invisible garbage for IE 6? */
 	private static $fixIE = TRUE;
@@ -61,9 +60,9 @@ final class HttpResponse extends /*Nette\*/Object implements IHttpResponse
 	/**
 	 * Sets HTTP response code.
 	 * @param  int
-	 * @return void
-	 * @throws \InvalidArgumentException  if code is invalid
-	 * @throws \InvalidStateException  if HTTP headers have been sent
+	 * @return HttpResponse  provides a fluent interface
+	 * @throws InvalidArgumentException  if code is invalid
+	 * @throws InvalidStateException  if HTTP headers have been sent
 	 */
 	public function setCode($code)
 	{
@@ -77,16 +76,17 @@ final class HttpResponse extends /*Nette\*/Object implements IHttpResponse
 		);
 
 		if (!isset($allowed[$code])) {
-			throw new /*\*/InvalidArgumentException("Bad HTTP response '$code'.");
+			throw new InvalidArgumentException("Bad HTTP response '$code'.");
 
 		} elseif (headers_sent($file, $line)) {
-			throw new /*\*/InvalidStateException("Cannot set HTTP code after HTTP headers have been sent" . ($file ? " (output started at $file:$line)." : "."));
+			throw new InvalidStateException("Cannot set HTTP code after HTTP headers have been sent" . ($file ? " (output started at $file:$line)." : "."));
 
 		} else {
 			$this->code = $code;
 			$protocol = isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.1';
 			header($protocol . ' ' . $code, TRUE, $code);
 		}
+		return $this;
 	}
 
 
@@ -106,16 +106,21 @@ final class HttpResponse extends /*Nette\*/Object implements IHttpResponse
 	 * Sends a HTTP header and replaces a previous one.
 	 * @param  string  header name
 	 * @param  string  header value
-	 * @return void
-	 * @throws \InvalidStateException  if HTTP headers have been sent
+	 * @return HttpResponse  provides a fluent interface
+	 * @throws InvalidStateException  if HTTP headers have been sent
 	 */
 	public function setHeader($name, $value)
 	{
 		if (headers_sent($file, $line)) {
-			throw new /*\*/InvalidStateException("Cannot send header after HTTP headers have been sent" . ($file ? " (output started at $file:$line)." : "."));
+			throw new InvalidStateException("Cannot send header after HTTP headers have been sent" . ($file ? " (output started at $file:$line)." : "."));
 		}
-                $aURL = Environment::getHttpRequest()->getUri()->absoluteUri;
-		header($name . ': ' . $value, TRUE, $this->code);
+
+		if ($value === NULL && function_exists('header_remove')) {
+			header_remove($name);
+		} else {
+			header($name . ': ' . $value, TRUE, $this->code);
+		}
+		return $this;
 	}
 
 
@@ -125,12 +130,12 @@ final class HttpResponse extends /*Nette\*/Object implements IHttpResponse
 	 * @param  string  header name
 	 * @param  string  header value
 	 * @return void
-	 * @throws \InvalidStateException  if HTTP headers have been sent
+	 * @throws InvalidStateException  if HTTP headers have been sent
 	 */
 	public function addHeader($name, $value)
 	{
 		if (headers_sent($file, $line)) {
-			throw new /*\*/InvalidStateException("Cannot send header after HTTP headers have been sent" . ($file ? " (output started at $file:$line)." : "."));
+			throw new InvalidStateException("Cannot send header after HTTP headers have been sent" . ($file ? " (output started at $file:$line)." : "."));
 		}
 
 		header($name . ': ' . $value, FALSE, $this->code);
@@ -142,12 +147,13 @@ final class HttpResponse extends /*Nette\*/Object implements IHttpResponse
 	 * Sends a Content-type HTTP header.
 	 * @param  string  mime-type
 	 * @param  string  charset
-	 * @return void
-	 * @throws \InvalidStateException  if HTTP headers have been sent
+	 * @return HttpResponse  provides a fluent interface
+	 * @throws InvalidStateException  if HTTP headers have been sent
 	 */
 	public function setContentType($type, $charset = NULL)
 	{
 		$this->setHeader('Content-Type', $type . ($charset ? '; charset=' . $charset : ''));
+		return $this;
 	}
 
 
@@ -157,7 +163,7 @@ final class HttpResponse extends /*Nette\*/Object implements IHttpResponse
 	 * @param  string  URL
 	 * @param  int     HTTP code
 	 * @return void
-	 * @throws \InvalidStateException  if HTTP headers have been sent
+	 * @throws InvalidStateException  if HTTP headers have been sent
 	 */
 	public function redirect($url, $code = self::S302_FOUND)
 	{
@@ -177,7 +183,7 @@ final class HttpResponse extends /*Nette\*/Object implements IHttpResponse
 	 * Sets the number of seconds before a page cached on a browser expires.
 	 * @param  mixed  timestamp or number of seconds
 	 * @return void
-	 * @throws \InvalidStateException  if HTTP headers have been sent
+	 * @throws InvalidStateException  if HTTP headers have been sent
 	 */
 	public function expire($seconds)
 	{
@@ -186,10 +192,10 @@ final class HttpResponse extends /*Nette\*/Object implements IHttpResponse
 		}
 
 		if ($seconds > 0) {
-			if ($seconds <= /*Nette\*/Tools::YEAR) {
+			if ($seconds <= Tools::YEAR) {
 				$seconds += time();
 			}
-			$this->setHeader('Cache-Control', 'max-age=' . ($seconds - time()). ',must-revalidate');
+			$this->setHeader('Cache-Control', 'max-age=' . ($seconds - time()));
 			$this->setHeader('Expires', self::date($seconds));
 
 		} else { // no cache
@@ -265,7 +271,9 @@ final class HttpResponse extends /*Nette\*/Object implements IHttpResponse
 	 */
 	public function enableCompression()
 	{
-		if (headers_sent()) return FALSE;
+		if (headers_sent()) {
+			return FALSE;
+		}
 
 		if ($this->getHeader('Content-Encoding') !== NULL) {
 			return FALSE; // called twice
@@ -280,7 +288,7 @@ final class HttpResponse extends /*Nette\*/Object implements IHttpResponse
 			ini_set('zlib.output_compression', 'Off');
 			ini_set('zlib.output_compression_level', '6');
 		}
-		ob_start('ob_gzhandler');
+		ob_start('ob_gzhandler', 1);
 		return TRUE;
 	}
 
@@ -312,19 +320,19 @@ final class HttpResponse extends /*Nette\*/Object implements IHttpResponse
 	 * @param  string
 	 * @param  string
 	 * @param  bool
-	 * @return void
-	 * @throws \InvalidStateException  if HTTP headers have been sent
+	 * @return HttpResponse  provides a fluent interface
+	 * @throws InvalidStateException  if HTTP headers have been sent
 	 */
 	public function setCookie($name, $value, $expire, $path = NULL, $domain = NULL, $secure = NULL)
 	{
 		if (headers_sent($file, $line)) {
-			throw new /*\*/InvalidStateException("Cannot set cookie after HTTP headers have been sent" . ($file ? " (output started at $file:$line)." : "."));
+			throw new InvalidStateException("Cannot set cookie after HTTP headers have been sent" . ($file ? " (output started at $file:$line)." : "."));
 		}
 
 		if (is_string($expire) && !is_numeric($expire)) {
 			$expire = strtotime($expire);
 
-		} elseif ($expire > 0 && $expire <= /*Nette\*/Tools::YEAR) {
+		} elseif ($expire > 0 && $expire <= Tools::YEAR) {
 			$expire += time();
 		}
 
@@ -337,6 +345,7 @@ final class HttpResponse extends /*Nette\*/Object implements IHttpResponse
 			$secure === NULL ? $this->cookieSecure : (bool) $secure,
 			TRUE // added in PHP 5.2.0.
 		);
+		return $this;
 	}
 
 
@@ -348,12 +357,12 @@ final class HttpResponse extends /*Nette\*/Object implements IHttpResponse
 	 * @param  string
 	 * @param  bool
 	 * @return void
-	 * @throws \InvalidStateException  if HTTP headers have been sent
+	 * @throws InvalidStateException  if HTTP headers have been sent
 	 */
 	public function deleteCookie($name, $path = NULL, $domain = NULL, $secure = NULL)
 	{
 		if (headers_sent($file, $line)) {
-			throw new /*\*/InvalidStateException("Cannot delete cookie after HTTP headers have been sent" . ($file ? " (output started at $file:$line)." : "."));
+			throw new InvalidStateException("Cannot delete cookie after HTTP headers have been sent" . ($file ? " (output started at $file:$line)." : "."));
 		}
 
 		setcookie(

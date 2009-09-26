@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Loaders
- * @version    $Id: RobotLoader.php 474 2009-08-04 00:43:08Z david@grudl.com $
  */
 
-/*namespace Nette\Loaders;*/
+
 
 
 
@@ -70,14 +69,14 @@ class RobotLoader extends AutoLoader
 	public function register()
 	{
 		$cache = $this->getCache();
-		$data = $cache['data'];
-		if ($data['opt'] === array($this->scanDirs, $this->ignoreDirs, $this->acceptFiles)) {
-			$this->list = $data['list'];
+		$key = $this->getKey();
+		if (isset($cache[$key])) {
+			$this->list = $cache[$key];
 		} else {
 			$this->rebuild();
 		}
 
-		if (isset($this->list[strtolower(__CLASS__)]) && class_exists(/*Nette\Loaders\*/'NetteLoader', FALSE)) {
+		if (isset($this->list[strtolower(__CLASS__)]) && class_exists('NetteLoader', FALSE)) {
 			NetteLoader::getInstance()->unregister();
 		}
 
@@ -94,7 +93,7 @@ class RobotLoader extends AutoLoader
 	public function tryLoad($type)
 	{
 		$type = strtolower($type);
-		/*$type = ltrim($type, '\\'); // PHP namespace bug #49143 */
+		
 		if (isset($this->list[$type])) {
 			if ($this->list[$type] !== FALSE) {
 				LimitedScope::load($this->list[$type]);
@@ -138,11 +137,7 @@ class RobotLoader extends AutoLoader
 		}
 
 		$this->rebuilded = TRUE;
-		$cache = $this->getCache();
-		$cache['data'] = array(
-			'list' => $this->list,
-			'opt' => array($this->scanDirs, $this->ignoreDirs, $this->acceptFiles),
-		);
+		$this->getCache()->save($this->getKey(), $this->list);
 	}
 
 
@@ -151,14 +146,14 @@ class RobotLoader extends AutoLoader
 	 * Add directory (or directories) to list.
 	 * @param  string|array
 	 * @return void
-	 * @throws \DirectoryNotFoundException if path is not found
+	 * @throws DirectoryNotFoundException if path is not found
 	 */
 	public function addDirectory($path)
 	{
 		foreach ((array) $path as $val) {
 			$real = realpath($val);
 			if ($real === FALSE) {
-				throw new /*\*/DirectoryNotFoundException("Directory '$val' not found.");
+				throw new DirectoryNotFoundException("Directory '$val' not found.");
 			}
 			$this->scanDirs[] = $real;
 		}
@@ -175,9 +170,9 @@ class RobotLoader extends AutoLoader
 	public function addClass($class, $file)
 	{
 		$class = strtolower($class);
-		if (isset($this->list[$class]) && $this->list[$class] !== $file) {
+		if (!empty($this->list[$class]) && $this->list[$class] !== $file) {
 			spl_autoload_call($class); // hack: enables exceptions
-			throw new /*\*/InvalidStateException("Ambiguous class '$class' resolution; defined in $file and in " . $this->list[$class] . ".");
+			throw new InvalidStateException("Ambiguous class '$class' resolution; defined in $file and in " . $this->list[$class] . ".");
 		}
 		$this->list[$class] = $file;
 	}
@@ -327,11 +322,21 @@ class RobotLoader extends AutoLoader
 
 
 	/**
-	 * @return Nette\Caching\Cache
+	 * @return Cache
 	 */
 	protected function getCache()
 	{
-		return /*Nette\*/Environment::getCache('Nette.RobotLoader');
+		return Environment::getCache('Nette.RobotLoader');
+	}
+
+
+
+	/**
+	 * @return string
+	 */
+	protected function getKey()
+	{
+		return md5("$this->ignoreDirs|$this->acceptFiles|" . implode('|', $this->scanDirs));
 	}
 
 
@@ -341,7 +346,7 @@ class RobotLoader extends AutoLoader
 	 */
 	protected function isProduction()
 	{
-		return /*Nette\*/Environment::isProduction();
+		return Environment::isProduction();
 	}
 
 }

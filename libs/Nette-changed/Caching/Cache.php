@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Caching
- * @version    $Id: Cache.php 365 2009-06-23 20:55:06Z david@grudl.com $
  */
 
-/*namespace Nette\Caching;*/
+
 
 
 
@@ -33,7 +32,7 @@ require_once dirname(__FILE__) . '/../Object.php';
  * @copyright  Copyright (c) 2004, 2009 David Grudl
  * @package    Nette\Caching
  */
-class Cache extends /*Nette\*/Object implements /*\*/ArrayAccess
+class Cache extends Object implements ArrayAccess
 {
 	/**#@+ dependency */
 	const PRIORITY = 'priority';
@@ -43,6 +42,7 @@ class Cache extends /*Nette\*/Object implements /*\*/ArrayAccess
 	const FILES = 'files';
 	const ITEMS = 'items';
 	const CONSTS = 'consts';
+	const CALLBACKS = 'callbacks';
 	const ALL = 'all';
 	/**#@-*/
 
@@ -72,7 +72,7 @@ class Cache extends /*Nette\*/Object implements /*\*/ArrayAccess
 		$this->namespace = (string) $namespace;
 
 		if (strpos($this->namespace, self::NAMESPACE_SEPARATOR) !== FALSE) {
-			throw new /*\*/InvalidArgumentException("Namespace name contains forbidden character.");
+			throw new InvalidArgumentException("Namespace name contains forbidden character.");
 		}
 	}
 
@@ -123,30 +123,57 @@ class Cache extends /*Nette\*/Object implements /*\*/ArrayAccess
 	 * - Cache::CONSTS => (array|string) cache items
 	 *
 	 * @param  string key
-	 * @param  mixed
-	 * @param  array
+	 * @param  mixed  value
+	 * @param  array  dependencies
 	 * @return void
-	 * @throws \InvalidArgumentException
+	 * @throws InvalidArgumentException
 	 */
-	public function save($key, $data, array $dependencies = NULL)
+	public function save($key, $data, array $dp = NULL)
 	{
 		if (!is_string($key)) {
-			throw new /*\*/InvalidArgumentException("Cache key name must be string, " . gettype($key) ." given.");
+			throw new InvalidArgumentException("Cache key name must be string, " . gettype($key) ." given.");
 		}
 
-		$this->key = NULL;
-
-		if (isset($dependencies[self::ITEMS])) {
-			$dependencies[self::ITEMS] = (array) $dependencies[self::ITEMS];
-			foreach ($dependencies[self::ITEMS] as $k => $v) {
-				$dependencies[self::ITEMS][$k] = $this->namespace . self::NAMESPACE_SEPARATOR . $v;
+		// convert expire into relative amount of seconds
+		if (!empty($dp[Cache::EXPIRE])) {
+			$expire = & $dp[Cache::EXPIRE];
+			if (is_string($expire) && !is_numeric($expire)) {
+				$expire = strtotime($expire) - time();
+			} elseif ($expire > Tools::YEAR) {
+				$expire -= time();
 			}
 		}
 
+		// convert FILES into CALLBACKS
+		if (isset($dp[self::FILES])) {
+			//clearstatcache();
+			foreach ((array) $dp[self::FILES] as $item) {
+				$dp[self::CALLBACKS][] = array(array(__CLASS__, 'checkFile'), $item, @filemtime($item)); // intentionally @
+			}
+			unset($dp[self::FILES]);
+		}
+
+		// add namespaces to items
+		if (isset($dp[self::ITEMS])) {
+			$dp[self::ITEMS] = (array) $dp[self::ITEMS];
+			foreach ($dp[self::ITEMS] as $k => $item) {
+				$dp[self::ITEMS][$k] = $this->namespace . self::NAMESPACE_SEPARATOR . $item;
+			}
+		}
+
+		// convert CONSTS into CALLBACKS
+		if (isset($dp[self::CONSTS])) {
+			foreach ((array) $dp[self::CONSTS] as $item) {
+				$dp[self::CALLBACKS][] = array(array(__CLASS__, 'checkConst'), $item, constant($item));
+			}
+			unset($dp[self::CONSTS]);
+		}
+
+		$this->key = NULL;
 		$this->storage->write(
 			$this->namespace . self::NAMESPACE_SEPARATOR . $key,
 			$data,
-			(array) $dependencies
+			(array) $dp
 		);
 	}
 
@@ -178,12 +205,12 @@ class Cache extends /*Nette\*/Object implements /*\*/ArrayAccess
 	 * @param  string key
 	 * @param  mixed
 	 * @return void
-	 * @throws \InvalidArgumentException
+	 * @throws InvalidArgumentException
 	 */
 	public function offsetSet($key, $data)
 	{
 		if (!is_string($key)) { // prevents NULL
-			throw new /*\*/InvalidArgumentException("Cache key name must be string, " . gettype($key) ." given.");
+			throw new InvalidArgumentException("Cache key name must be string, " . gettype($key) ." given.");
 		}
 
 		$this->key = $this->data = NULL;
@@ -200,12 +227,12 @@ class Cache extends /*Nette\*/Object implements /*\*/ArrayAccess
 	 * Retrieves the specified item from the cache or NULL if the key is not found (\ArrayAccess implementation).
 	 * @param  string key
 	 * @return mixed|NULL
-	 * @throws \InvalidArgumentException
+	 * @throws InvalidArgumentException
 	 */
 	public function offsetGet($key)
 	{
 		if (!is_string($key)) {
-			throw new /*\*/InvalidArgumentException("Cache key name must be string, " . gettype($key) ." given.");
+			throw new InvalidArgumentException("Cache key name must be string, " . gettype($key) ." given.");
 		}
 
 		if ($this->key === $key) {
@@ -222,12 +249,12 @@ class Cache extends /*Nette\*/Object implements /*\*/ArrayAccess
 	 * Exists item in cache? (\ArrayAccess implementation).
 	 * @param  string key
 	 * @return bool
-	 * @throws \InvalidArgumentException
+	 * @throws InvalidArgumentException
 	 */
 	public function offsetExists($key)
 	{
 		if (!is_string($key)) {
-			throw new /*\*/InvalidArgumentException("Cache key name must be string, " . gettype($key) ." given.");
+			throw new InvalidArgumentException("Cache key name must be string, " . gettype($key) ." given.");
 		}
 
 		$this->key = $key;
@@ -241,16 +268,64 @@ class Cache extends /*Nette\*/Object implements /*\*/ArrayAccess
 	 * Removes the specified item from the cache.
 	 * @param  string key
 	 * @return void
-	 * @throws \InvalidArgumentException
+	 * @throws InvalidArgumentException
 	 */
 	public function offsetUnset($key)
 	{
 		if (!is_string($key)) {
-			throw new /*\*/InvalidArgumentException("Cache key name must be string, " . gettype($key) ." given.");
+			throw new InvalidArgumentException("Cache key name must be string, " . gettype($key) ." given.");
 		}
 
 		$this->key = $this->data = NULL;
 		$this->storage->remove($this->namespace . self::NAMESPACE_SEPARATOR . $key);
+	}
+
+
+
+	/********************* dependency checkers ****************d*g**/
+
+
+
+	/**
+	 * Checks CALLBACKS dependencies.
+	 * @param  array
+	 * @return bool
+	 */
+	public static function checkCallbacks($callbacks)
+	{
+		foreach ($callbacks as $callback) {
+			$func = array_shift($callback);
+			if (!call_user_func_array($func, $callback)) {
+				return FALSE;
+			}
+		}
+		return TRUE;
+	}
+
+
+
+	/**
+	 * Checks CONSTS dependency.
+	 * @param  string
+	 * @param  mixed
+	 * @return bool
+	 */
+	private static function checkConst($const, $value)
+	{
+		return defined($const) && constant($const) === $value;
+	}
+
+
+
+	/**
+	 * Checks FILES dependency.
+	 * @param  string
+	 * @param  int
+	 * @return bool
+	 */
+	private static function checkFile($file, $time)
+	{
+		return @filemtime($file) == $time; // intentionally @
 	}
 
 }

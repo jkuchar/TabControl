@@ -15,10 +15,13 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Forms
- * @version    $Id: INamingContainer.php 182 2008-12-31 00:28:33Z david@grudl.com $
  */
 
-/*namespace Nette\Forms;*/
+
+
+
+
+require_once dirname(__FILE__) . '/../IComponentContainer.php';
 
 
 
@@ -29,6 +32,6 @@
  * @copyright  Copyright (c) 2004, 2009 David Grudl
  * @package    Nette\Forms
  */
-interface INamingContainer
+interface INamingContainer extends IComponentContainer
 {
 }

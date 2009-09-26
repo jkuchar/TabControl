@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette
- * @version    $Id: FreezableObject.php 441 2009-07-21 09:43:37Z david@grudl.com $
  */
 
-/*namespace Nette;*/
+
 
 
 
@@ -76,23 +75,12 @@ abstract class FreezableObject extends Object
 
 
 	/**
-	 * Creates a modifiable clone of the object.
-	 * @return void
-	 */
-	public function __wakeup()
-	{
-		$this->frozen = FALSE;
-	}
-
-
-
-	/**
 	 * @return void
 	 */
 	protected function updating()
 	{
 		if ($this->frozen) {
-			throw new /*\*/InvalidStateException("Cannot modify a frozen object '$this->class'.");
+			throw new InvalidStateException("Cannot modify a frozen object '$this->class'.");
 		}
 	}
 

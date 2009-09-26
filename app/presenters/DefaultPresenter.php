@@ -266,7 +266,7 @@ class DefaultPresenter extends BasePresenter {
 
     function createTabTemplate($name, Tab $tab) {
         $templatePersons = new Template;
-        $templatePersons->setFile(Environment::expand("%templatesDir%/default/tabs/sablona.phtml"));
+        $templatePersons->setFile(Environment::expand("%appDir%/templates/default/tabs/sablona.phtml"));
         return $templatePersons;
     }
 

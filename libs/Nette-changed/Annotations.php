@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette
- * @version    $Id: Annotations.php 233 2009-03-26 17:26:46Z jakub.vrana $
  */
 
-/*namespace Nette;*/
+
 
 
 
@@ -41,18 +40,18 @@ final class Annotations
 	 */
 	final public function __construct()
 	{
-		throw new /*\*/LogicException("Cannot instantiate static class " . get_class($this));
+		throw new LogicException("Cannot instantiate static class " . get_class($this));
 	}
 
 
 
 	/**
 	 * Has class/method/property specified annotation?
-	 * @param  \ReflectionClass|\ReflectionMethod|\ReflectionProperty
+	 * @param  ReflectionClass|\ReflectionMethod|\ReflectionProperty
 	 * @param  string    annotation name
 	 * @return bool
 	 */
-	public static function has(/*\*/Reflector $r, $name)
+	public static function has(Reflector $r, $name)
 	{
 		$cache = & self::init($r);
 		return !empty($cache[$name]);
@@ -62,11 +61,11 @@ final class Annotations
 
 	/**
 	 * Returns an annotation value.
-	 * @param  \ReflectionClass|\ReflectionMethod|\ReflectionProperty
+	 * @param  ReflectionClass|\ReflectionMethod|\ReflectionProperty
 	 * @param  string    annotation name
 	 * @return array
 	 */
-	public static function get(/*\*/Reflector $r, $name)
+	public static function get(Reflector $r, $name)
 	{
 		$cache = & self::init($r);
 		return isset($cache[$name]) ? end($cache[$name]) : NULL;
@@ -76,11 +75,11 @@ final class Annotations
 
 	/**
 	 * Returns all annotations.
-	 * @param  \ReflectionClass|\ReflectionMethod|\ReflectionProperty
+	 * @param  ReflectionClass|\ReflectionMethod|\ReflectionProperty
 	 * @param  string    annotation name
 	 * @return array
 	 */
-	public static function getAll(/*\*/Reflector $r, $name = NULL)
+	public static function getAll(Reflector $r, $name = NULL)
 	{
 		$cache = & self::init($r);
 
@@ -99,12 +98,22 @@ final class Annotations
 
 	/**
 	 * Parses and caches annotations.
-	 * @param  \ReflectionClass|\ReflectionMethod|\ReflectionProperty
+	 * @param  ReflectionClass|\ReflectionMethod|\ReflectionProperty
 	 * @return array
 	 */
-	public static function & init(/*\*/Reflector $r)
+	public static function & init(Reflector $r)
 	{
-		$cache = & self::$cache[$r->getName()][$r instanceof /*\*/ReflectionClass ? '' : $r->getDeclaringClass()->getName()];
+		$cache = & self::$cache[$r->getName()];
+		if ($r instanceof ReflectionClass) {
+			$cache = & $cache[''];
+
+		} elseif ($r instanceof ReflectionMethod) {
+			$cache = & $cache[$r->getDeclaringClass()->getName()];
+
+		} else {
+			$cache = & $cache['$' . $r->getDeclaringClass()->getName()];
+		}
+
 		if ($cache !== NULL) {
 			return $cache;
 		}
@@ -129,6 +138,9 @@ final class Annotations
 					} elseif (strcasecmp($val, 'false') === 0) {
 						$val = FALSE;
 
+					} elseif (strcasecmp($val, 'null') === 0) {
+						$val = NULL;
+
 					} elseif (is_numeric($val)) {
 						$val = 1 * $val;
 					}
@@ -141,7 +153,7 @@ final class Annotations
 					}
 				}
 
-				$items = count($items) < 2 && $key === '' ? $val : new /*\*/ArrayObject($items, /*\*/ArrayObject::ARRAY_AS_PROPS);
+				$items = count($items) < 2 && $key === '' ? $val : new ArrayObject($items, ArrayObject::ARRAY_AS_PROPS);
 
 			} else {
 				$items = TRUE;

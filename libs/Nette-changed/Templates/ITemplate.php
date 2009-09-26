@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Templates
- * @version    $Id: ITemplate.php 440 2009-07-20 14:25:45Z david@grudl.com $
  */
 
-/*namespace Nette\Templates;*/
+
 
 
 

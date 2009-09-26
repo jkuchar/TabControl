@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Forms
- * @version    $Id: MultiSelectBox.php 182 2008-12-31 00:28:33Z david@grudl.com $
  */
 
-/*namespace Nette\Forms;*/
+
 
 
 
@@ -101,7 +100,7 @@ class MultiSelectBox extends SelectBox
 
 	/**
 	 * Generates control's HTML element.
-	 * @return Nette\Web\Html
+	 * @return Html
 	 */
 	public function getControl()
 	{

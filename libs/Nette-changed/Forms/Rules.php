@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Forms
- * @version    $Id: Rules.php 303 2009-05-05 13:49:32Z david@grudl.com $
  */
 
-/*namespace Nette\Forms;*/
+
 
 
 
@@ -33,7 +32,7 @@ require_once dirname(__FILE__) . '/../Object.php';
  * @copyright  Copyright (c) 2004, 2009 David Grudl
  * @package    Nette\Forms
  */
-final class Rules extends /*Nette\*/Object implements /*\*/IteratorAggregate
+final class Rules extends Object implements IteratorAggregate
 {
 	const VALIDATE_PREFIX = 'validate';
 
@@ -207,11 +206,11 @@ final class Rules extends /*Nette\*/Object implements /*\*/IteratorAggregate
 
 	/**
 	 * Iterates over ruleset.
-	 * @return \ArrayIterator
+	 * @return ArrayIterator
 	 */
 	final public function getIterator()
 	{
-		return new /*\*/ArrayIterator($this->rules);
+		return new ArrayIterator($this->rules);
 	}
 
 
@@ -241,7 +240,7 @@ final class Rules extends /*Nette\*/Object implements /*\*/IteratorAggregate
 		// check callback
 		if (!is_callable($this->getCallback($rule))) {
 			$operation = is_scalar($rule->operation) ? " '$rule->operation'" : '';
-			throw new /*\*/InvalidArgumentException("Unknown operation$operation for control '{$rule->control->name}'.");
+			throw new InvalidArgumentException("Unknown operation$operation for control '{$rule->control->name}'.");
 		}
 	}
 
@@ -254,7 +253,7 @@ final class Rules extends /*Nette\*/Object implements /*\*/IteratorAggregate
 			return array($rule->control->getClass(), self::VALIDATE_PREFIX . ltrim($op, ':'));
 
 		} else {
-			/**/fixCallback($op);/**/
+			fixCallback($op);
 			return $op;
 		}
 	}

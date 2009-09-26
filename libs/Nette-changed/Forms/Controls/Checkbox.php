@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Forms
- * @version    $Id: Checkbox.php 315 2009-05-24 21:20:42Z david@grudl.com $
  */
 
-/*namespace Nette\Forms;*/
+
 
 
 
@@ -51,18 +50,19 @@ class Checkbox extends FormControl
 	/**
 	 * Sets control's value.
 	 * @param  bool
-	 * @return void
+	 * @return Checkbox  provides a fluent interface
 	 */
 	public function setValue($value)
 	{
 		$this->value = is_scalar($value) ? (bool) $value : FALSE;
+		return $this;
 	}
 
 
 
 	/**
 	 * Generates control's HTML element.
-	 * @return Nette\Web\Html
+	 * @return Html
 	 */
 	public function getControl()
 	{

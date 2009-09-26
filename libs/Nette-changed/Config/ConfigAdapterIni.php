@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Config
- * @version    $Id: ConfigAdapterIni.php 329 2009-05-28 20:18:49Z david@grudl.com $
  */
 
-/*namespace Nette\Config;*/
+
 
 
 
@@ -52,7 +51,7 @@ final class ConfigAdapterIni implements IConfigAdapter
 	 */
 	final public function __construct()
 	{
-		throw new /*\*/LogicException("Cannot instantiate static class " . get_class($this));
+		throw new LogicException("Cannot instantiate static class " . get_class($this));
 	}
 
 
@@ -62,18 +61,18 @@ final class ConfigAdapterIni implements IConfigAdapter
 	 * @param  string  file name
 	 * @param  string  section to load
 	 * @return array
-	 * @throws \InvalidStateException
+	 * @throws InvalidStateException
 	 */
 	public static function load($file, $section = NULL)
 	{
 		if (!is_file($file) || !is_readable($file)) {
-			throw new /*\*/FileNotFoundException("File '$file' is missing or is not readable.");
+			throw new FileNotFoundException("File '$file' is missing or is not readable.");
 		}
 
-		/*Nette\*/Tools::tryError();
+		Tools::tryError();
 		$ini = parse_ini_file($file, TRUE);
-		if (/*Nette\*/Tools::catchError($msg)) {
-			throw new /*\*/Exception($msg);
+		if (Tools::catchError($msg)) {
+			throw new Exception($msg);
 		}
 
 		$separator = trim(self::$sectionSeparator);
@@ -93,7 +92,7 @@ final class ConfigAdapterIni implements IConfigAdapter
 							if (!isset($cursor[$part]) || is_array($cursor[$part])) {
 								$cursor = & $cursor[$part];
 							} else {
-								throw new /*\*/InvalidStateException("Invalid key '$key' in section [$secName] in '$file'.");
+								throw new InvalidStateException("Invalid key '$key' in section [$secName] in '$file'.");
 							}
 						}
 						$cursor = $val;
@@ -110,15 +109,15 @@ final class ConfigAdapterIni implements IConfigAdapter
 						if (isset($cursor[$part]) && is_array($cursor[$part])) {
 							$cursor = & $cursor[$part];
 						} else {
-							throw new /*\*/InvalidStateException("Missing parent section [$parent] in '$file'.");
+							throw new InvalidStateException("Missing parent section [$parent] in '$file'.");
 						}
 					}
-					$secData = /*Nette\*/Tools::arrayMergeTree($secData, $cursor);
+					$secData = ArrayTools::mergeTree($secData, $cursor);
 				}
 
 				$secName = trim($parts[0]);
 				if ($secName === '') {
-					throw new /*\*/InvalidStateException("Invalid empty section name in '$file'.");
+					throw new InvalidStateException("Invalid empty section name in '$file'.");
 				}
 			}
 
@@ -128,7 +127,7 @@ final class ConfigAdapterIni implements IConfigAdapter
 					if (!isset($cursor[$part]) || is_array($cursor[$part])) {
 						$cursor = & $cursor[$part];
 					} else {
-						throw new /*\*/InvalidStateException("Invalid section [$secName] in '$file'.");
+						throw new InvalidStateException("Invalid section [$secName] in '$file'.");
 					}
 				}
 			} else {
@@ -136,7 +135,7 @@ final class ConfigAdapterIni implements IConfigAdapter
 			}
 
 			if (is_array($secData) && is_array($cursor)) {
-				$secData = /*Nette\*/Tools::arrayMergeTree($secData, $cursor);
+				$secData = ArrayTools::mergeTree($secData, $cursor);
 			}
 
 			$cursor = $secData;
@@ -146,7 +145,7 @@ final class ConfigAdapterIni implements IConfigAdapter
 			return $data;
 
 		} elseif (!isset($data[$section]) || !is_array($data[$section])) {
-			throw new /*\*/InvalidStateException("There is not section [$section] in '$file'.");
+			throw new InvalidStateException("There is not section [$section] in '$file'.");
 
 		} else {
 			return $data[$section];
@@ -170,8 +169,8 @@ final class ConfigAdapterIni implements IConfigAdapter
 
 		if ($section === NULL) {
 			foreach ($config as $secName => $secData) {
-				if (!(is_array($secData) || $secData instanceof /*\*/Traversable)) {
-					throw new /*\*/InvalidStateException("Invalid section '$section'.");
+				if (!(is_array($secData) || $secData instanceof Traversable)) {
+					throw new InvalidStateException("Invalid section '$section'.");
 				}
 
 				$output[] = "[$secName]";
@@ -186,7 +185,7 @@ final class ConfigAdapterIni implements IConfigAdapter
 		}
 
 		if (!file_put_contents($file, implode(PHP_EOL, $output))) {
-			throw new /*\*/IOException("Cannot write file '$file'.");
+			throw new IOException("Cannot write file '$file'.");
 		}
 	}
 
@@ -202,7 +201,7 @@ final class ConfigAdapterIni implements IConfigAdapter
 	private static function build($input, & $output, $prefix)
 	{
 		foreach ($input as $key => $val) {
-			if (is_array($val) || $val instanceof /*\*/Traversable) {
+			if (is_array($val) || $val instanceof Traversable) {
 				self::build($val, $output, $prefix . $key . self::$keySeparator);
 
 			} elseif (is_bool($val)) {
@@ -215,7 +214,7 @@ final class ConfigAdapterIni implements IConfigAdapter
 				$output[] = "$prefix$key = \"$val\"";
 
 			} else {
-				throw new /*\*/InvalidArgumentException("The '$prefix$key' item must be scalar or array, " . gettype($val) ." given.");
+				throw new InvalidArgumentException("The '$prefix$key' item must be scalar or array, " . gettype($val) ." given.");
 			}
 		}
 	}

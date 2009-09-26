@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Forms
- * @version    $Id: RepeaterControl.php 182 2008-12-31 00:28:33Z david@grudl.com $
  */
 
-/*namespace Nette\Forms;*/
+
 
 
 
@@ -54,7 +53,7 @@ class RepeaterControl extends FormContainer /*implements IFormControl*/
 	 */
 	public function __construct()
 	{
-		throw new /*\*/NotImplementedException;
+		throw new NotImplementedException;
 	}
 
 
@@ -62,7 +61,7 @@ class RepeaterControl extends FormContainer /*implements IFormControl*/
 	/**
 	 * Set value.
 	 * @param  mixed
-	 * @return void
+	 * @return RepeaterControl  provides a fluent interface
 	 */
 	public function setValue($value)
 	{
@@ -71,6 +70,7 @@ class RepeaterControl extends FormContainer /*implements IFormControl*/
 		} else {
 			$this->value = array();
 		}
+		return $this;
 	}
 
 
@@ -88,10 +88,9 @@ class RepeaterControl extends FormContainer /*implements IFormControl*/
 
 	/**
 	 * Load HTTP data.
-	 * @param  array
 	 * @return void
 	 */
-	public function loadHttpData($data)
+	public function loadHttpData()
 	{
 		$name = $this->getName();
 		$this->setValue(isset($data[$name]) ? $data[$name] : array());

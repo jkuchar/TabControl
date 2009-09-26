@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Application
- * @version    $Id: PresenterHelpers.php 248 2009-03-30 04:38:25Z david@grudl.com $
  */
 
-/*namespace Nette\Application;*/
+
 
 
 
@@ -51,7 +50,7 @@ final class PresenterHelpers
 	 */
 	final public function __construct()
 	{
-		throw new /*\*/LogicException("Cannot instantiate static class " . get_class($this));
+		throw new LogicException("Cannot instantiate static class " . get_class($this));
 	}
 
 
@@ -66,7 +65,7 @@ final class PresenterHelpers
 		$params = & self::$ppCache[$class];
 		if ($params !== NULL) return $params;
 		$params = array();
-		if (is_subclass_of($class, /*Nette\Application\*/'PresenterComponent')) {
+		if (is_subclass_of($class, 'PresenterComponent')) {
 			// $class::getPersistentParams() in PHP 5.3
 			$defaults = get_class_vars($class);
 			foreach (call_user_func(array($class, 'getPersistentParams'), $class) as $name => $meta) {
@@ -93,7 +92,7 @@ final class PresenterHelpers
 		$components = & self::$pcCache[$class];
 		if ($components !== NULL) return $components;
 		$components = array();
-		if (is_subclass_of($class, /*Nette\Application\*/'Presenter')) {
+		if (is_subclass_of($class, 'Presenter')) {
 			// $class::getPersistentComponents() in PHP 5.3
 			foreach (call_user_func(array($class, 'getPersistentComponents'), $class) as $name => $meta) {
 				if (is_string($meta)) $name = $meta;
@@ -121,7 +120,7 @@ final class PresenterHelpers
 		try {
 			$cache = FALSE;
 			// check class
-			$rc = new /*\*/ReflectionClass($class);
+			$rc = new ReflectionClass($class);
 			if (!$rc->isInstantiable()) {
 				return FALSE;
 			}
@@ -134,7 +133,7 @@ final class PresenterHelpers
 
 			return $cache = TRUE;
 
-		} catch (/*\*/ReflectionException $e) {
+		} catch (ReflectionException $e) {
 			return FALSE;
 		}
 	}
@@ -224,7 +223,7 @@ final class PresenterHelpers
 	{
 		$cache = & self::$mpCache[strtolower($class . ':' . $method)];
 		if ($cache !== NULL) return $cache;
-		$rm = new /*\*/ReflectionMethod($class, $method);
+		$rm = new ReflectionMethod($class, $method);
 		$cache = array();
 		foreach ($rm->getParameters() as $param) {
 			$cache[$param->getName()] = $param->isDefaultValueAvailable()

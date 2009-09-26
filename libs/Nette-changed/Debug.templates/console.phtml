@@ -16,17 +16,16 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette
- * @version    $Id: console.phtml 423 2009-07-15 09:45:41Z david@grudl.com $
  *
  * @param      array     $payload
  * @return     void
  */
 
-/*namespace Nette;*/
 
 
 
-if (!function_exists(/*Nette\*/'_netteDumpCb2')) {
+
+if (!function_exists('_netteDumpCb2')) {
 
 	function _netteDumpCb2($m)
 	{
@@ -178,7 +177,7 @@ ob_start();
 	<?php foreach ((is_array($item['var']) ? $item['var'] : array('' => $item['var'])) as $key => $val): ?>
 	<tr class="<?php echo $i++ % 2 ? 'odd' : 'even' ?>">
 		<th><?php echo htmlspecialchars($key) ?></th>
-		<td><?php echo preg_replace_callback('#(<pre class="dump">|\s+)?(.*)\((\d+)\) <code>#', /*Nette\*/'_netteDumpCb2', Debug::dump($val, TRUE)) ?></td>
+		<td><?php echo preg_replace_callback('#(<pre class="dump">|\s+)?(.*)\((\d+)\) <code>#', '_netteDumpCb2', Debug::dump($val, TRUE)) ?></td>
 	</tr>
 	<?php endforeach ?>
 	</table>
@@ -189,7 +188,7 @@ ob_start();
 /* <![CDATA[ */
 if (typeof _netteConsole === 'undefined') {
 	_netteConsole = window.open('','_netteConsole','width=700,height=700,resizable,scrollbars=yes');
-	_netteConsole.document.write(<?php echo json_encode(preg_replace('#\s+#', ' ', $document)) ?>);
+	_netteConsole.document.write(<?php echo json_encode(preg_replace('#[ \t\r\n]+#', ' ', $document)) ?>);
 	_netteConsole.document.close();
 	_netteConsole.document.onkeyup = function(e) {
 		e = e || _netteConsole.event;

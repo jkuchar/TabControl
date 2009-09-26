@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Security
- * @version    $Id: IIdentity.php 182 2008-12-31 00:28:33Z david@grudl.com $
  */
 
-/*namespace Nette\Security;*/
+
 
 
 

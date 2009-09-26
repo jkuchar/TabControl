@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Mail
- * @version    $Id: MailMimePart.php 343 2009-06-14 22:04:11Z david@grudl.com $
  */
 
-/*namespace Nette\Mail;*/
+
 
 
 
@@ -37,7 +36,7 @@ require_once dirname(__FILE__) . '/../Object.php';
  * @property   string $body
  * @property-read array $headers
  */
-class MailMimePart extends /*Nette\*/Object
+class MailMimePart extends Object
 {
 	/**#@+ Encoding */
 	const ENCODING_BASE64 = 'base64';
@@ -70,7 +69,7 @@ class MailMimePart extends /*Nette\*/Object
 	public function setHeader($name, $value, $append = FALSE)
 	{
 		if (!$name || preg_match('#[^a-z0-9-]#i', $name)) {
-			throw new /*\*/InvalidArgumentException("Header name must be non-empty alphanumeric string, '$name' given.");
+			throw new InvalidArgumentException("Header name must be non-empty alphanumeric string, '$name' given.");
 		}
 
 		if ($value == NULL) { // intentionally ==
@@ -86,11 +85,11 @@ class MailMimePart extends /*Nette\*/Object
 
 			foreach ($value as $email => $name) {
 				if (!preg_match('#^[^@",\s]+@[^@",\s]+\.[a-z]{2,10}$#i', $email)) {
-					throw new /*\*/InvalidArgumentException("Email address '$email' is not valid.");
+					throw new InvalidArgumentException("Email address '$email' is not valid.");
 				}
 
 				if (preg_match('#[\r\n]#', $name)) {
-					throw new /*\*/InvalidArgumentException("Name cannot contain the line separator.");
+					throw new InvalidArgumentException("Name cannot contain the line separator.");
 				}
 				$tmp[$email] = $name;
 			}
@@ -152,7 +151,7 @@ class MailMimePart extends /*Nette\*/Object
 					$email = " <$email>";
 				}
 				if ($len + strlen($email) + 1 > self::LINE_LENGTH) {
-					$s .= self::EOL . ' ';
+					$s .= self::EOL . "\t";
 					$len = 1;
 				}
 				$s .= "$email,";
@@ -296,7 +295,7 @@ class MailMimePart extends /*Nette\*/Object
 				break;
 
 			default:
-				throw new /*\*/InvalidStateException('Unknown encoding');
+				throw new InvalidStateException('Unknown encoding');
 			}
 		}
 
@@ -341,7 +340,7 @@ class MailMimePart extends /*Nette\*/Object
 			if ($l = strspn($s, $range, $pos)) {
 				while ($len + $l > self::LINE_LENGTH - 2) { // 2 = length of suffix ?=
 					$lx = self::LINE_LENGTH - $len - 2;
-					$o .= substr($s, $pos, $lx) . '?=' . self::EOL . ' ' . $prefix;
+					$o .= substr($s, $pos, $lx) . '?=' . self::EOL . "\t" . $prefix;
 					$pos += $lx;
 					$l -= $lx;
 					$len = strlen($prefix) + 1;
@@ -354,7 +353,7 @@ class MailMimePart extends /*Nette\*/Object
 				$len += 3;
 				// \xC0 tests UTF-8 character boudnary; 9 is reserved space for 4bytes UTF-8 character
 				if (($s[$pos] & "\xC0") !== "\x80" && $len > self::LINE_LENGTH - 2 - 9) {
-					$o .= '?=' . self::EOL . ' ' . $prefix;
+					$o .= '?=' . self::EOL . "\t" . $prefix;
 					$len = strlen($prefix) + 1 + 3;
 				}
 				$o .= '=' . strtoupper(bin2hex($s[$pos]));

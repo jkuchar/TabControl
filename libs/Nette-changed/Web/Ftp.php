@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Web
- * @version    $Id: Ftp.php 230 2009-03-19 12:16:22Z david@grudl.com $
  */
 
-/*namespace Nette\Web;*/
+
 
 
 
@@ -40,7 +39,7 @@ require_once dirname(__FILE__) . '/../Object.php';
  * @copyright  Copyright (c) 2004, 2009 David Grudl
  * @package    Nette\Web
  */
-class Ftp extends /*Nette\*/Object
+class Ftp extends Object
 {
 	/**#@+ FTP constant alias */
 	const ASCII = FTP_ASCII;
@@ -68,7 +67,7 @@ class Ftp extends /*Nette\*/Object
 	 * @param  string  method name
 	 * @param  array   arguments
 	 * @return mixed
-	 * @throws \MemberAccessException
+	 * @throws MemberAccessException
 	 * @throws FtpException
 	 */
 	public function __call($name, $args)
@@ -93,7 +92,7 @@ class Ftp extends /*Nette\*/Object
 		}
 
 
-		/*Nette\*/Tools::tryError();
+		Tools::tryError();
 
 		if ($func === 'ftp_connect' || $func === 'ftp_ssl_connect') {
 			$this->state = array($name => $args);
@@ -101,7 +100,7 @@ class Ftp extends /*Nette\*/Object
 			$res = NULL;
 
 		} elseif (!is_resource($this->resource)) {
-			/*Nette\*/Tools::catchError($msg);
+			Tools::catchError($msg);
 			throw new FtpException("Not connected to FTP server. Call connect() or ssl_connect() first.");
 
 		} else {
@@ -117,7 +116,7 @@ class Ftp extends /*Nette\*/Object
 			}
 		}
 
-		if (/*Nette\*/Tools::catchError($msg) && !$silent) {
+		if (Tools::catchError($msg) && !$silent) {
 			throw new FtpException($msg);
 		}
 
@@ -201,6 +200,6 @@ class Ftp extends /*Nette\*/Object
  *
  * @package    Nette\Web
  */
-class FtpException extends /*\*/Exception
+class FtpException extends Exception
 {
 }

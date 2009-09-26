@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette
- * @version    $Id: String.php 414 2009-07-13 23:25:32Z david@grudl.com $
  */
 
-/*namespace Nette;*/
+
 
 
 
@@ -37,7 +36,7 @@ final class String
 	 */
 	final public function __construct()
 	{
-		throw new /*\*/LogicException("Cannot instantiate static class " . get_class($this));
+		throw new LogicException("Cannot instantiate static class " . get_class($this));
 	}
 
 
@@ -232,6 +231,20 @@ final class String
 	public static function capitalize($s)
 	{
 		return mb_convert_case($s, MB_CASE_TITLE, 'UTF-8');
+	}
+
+
+
+	/**
+	 * Strips whitespace.
+	 * @param  string  UTF-8 encoding
+	 * @param  string
+	 * @return string
+	 */
+	public static function trim($s, $charlist = " \t\n\r\0\x0B\xC2\xA0")
+	{
+		$charlist = preg_quote($charlist, '#');
+		return preg_replace('#^['.$charlist.']+|['.$charlist.']+$#u', '', $s);
 	}
 
 }

@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Caching
- * @version    $Id: DummyStorage.php 191 2009-01-13 21:46:52Z david@grudl.com $
  */
 
-/*namespace Nette\Caching;*/
+
 
 
 
@@ -35,7 +34,7 @@ require_once dirname(__FILE__) . '/../Caching/ICacheStorage.php';
  * @copyright  Copyright (c) 2004, 2009 David Grudl
  * @package    Nette\Caching
  */
-class DummyStorage extends /*Nette\*/Object implements ICacheStorage
+class DummyStorage extends Object implements ICacheStorage
 {
 
 	/**

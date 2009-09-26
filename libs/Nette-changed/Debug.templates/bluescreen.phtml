@@ -16,20 +16,19 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette
- * @version    $Id: bluescreen.phtml 434 2009-07-18 18:43:49Z david@grudl.com $
  *
  * @param      array     $exception
  * @param      array     $colophons
  * @param      array     $internals
- * @param      Nette\Application\Application $application
+ * @param      Application $application
  * @return     void
  */
 
-/*namespace Nette;*/
 
 
 
-if (!function_exists(/*Nette\*/'_netteDebugPrintCode')) {
+
+if (!function_exists('_netteDebugPrintCode')) {
 
 /**
  * Prints source code.
@@ -96,7 +95,7 @@ function _netteDebugPrintCode($file, $line, $count = 15)
  */
 function _netteDump($var)
 {
-	return preg_replace_callback('#(<pre class="dump">|\s+)?(.*)\((\d+)\) <code>#', /*Nette\*/'_netteDumpCb', Debug::dump($var, TRUE));
+	return preg_replace_callback('#(<pre class="dump">|\s+)?(.*)\((\d+)\) <code>#', '_netteDumpCb', Debug::dump($var, TRUE));
 }
 
 function _netteDumpCb($m)
@@ -406,9 +405,9 @@ if (headers_sent()) {
 						<table>
 						<?php
 						try {
-							$r = isset($row['class']) ? new /*\*/ReflectionMethod($row['class'], $row['function']) : new /*\*/ReflectionFunction($row['function']);
+							$r = isset($row['class']) ? new ReflectionMethod($row['class'], $row['function']) : new ReflectionFunction($row['function']);
 							$params = $r->getParameters();
-						} catch (/*\*/Exception $e) {
+						} catch (Exception $e) {
 							$params = array();
 						}
 						foreach ($row['args'] as $k => $v) {

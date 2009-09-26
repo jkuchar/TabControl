@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Web
- * @version    $Id: IUser.php 182 2008-12-31 00:28:33Z david@grudl.com $
  */
 
-/*namespace Nette\Web;*/
+
 
 
 
@@ -38,7 +37,7 @@ interface IUser
 	 * @param  string
 	 * @param  mixed
 	 * @return void
-	 * @throws Nette\Security\AuthenticationException if authentication was not successful
+	 * @throws AuthenticationException if authentication was not successful
 	 */
 	function authenticate($username, $password, $extra = NULL);
 
@@ -56,20 +55,20 @@ interface IUser
 
 	/**
 	 * Returns current user identity, if any.
-	 * @return Nette\Security\IIdentity
+	 * @return IIdentity
 	 */
 	function getIdentity();
 
 	/**
 	 * Sets authentication handler.
-	 * @param  Nette\Security\IAuthenticator
+	 * @param  IAuthenticator
 	 * @return void
 	 */
-	function setAuthenticationHandler(/*Nette\Security\*/IAuthenticator $handler);
+	function setAuthenticationHandler(IAuthenticator $handler);
 
 	/**
 	 * Returns authentication handler.
-	 * @return Nette\Security\IAuthenticator
+	 * @return IAuthenticator
 	 */
 	function getAuthenticationHandler();
 
@@ -107,14 +106,14 @@ interface IUser
 
 	/**
 	 * Sets authorization handler.
-	 * @param  Nette\Security\IAuthorizator
+	 * @param  IAuthorizator
 	 * @return void
 	 */
-	function setAuthorizationHandler(/*Nette\Security\*/IAuthorizator $handler);
+	function setAuthorizationHandler(IAuthorizator $handler);
 
 	/**
 	 * Returns current authorization handler.
-	 * @return Nette\Security\IAuthorizator
+	 * @return IAuthorizator
 	 */
 	function getAuthorizationHandler();
 

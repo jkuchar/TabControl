@@ -15,12 +15,11 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Application
- * @version    $Id: Presenter.php 461 2009-07-24 11:56:07Z david@grudl.com $
  */
 
-/*namespace Nette\Application;*/
 
-/*use Nette\Environment;*/
+
+
 
 
 
@@ -73,14 +72,20 @@ abstract class Presenter extends Control implements IPresenter
 	/** @var int */
 	public static $invalidLinkMode;
 
-	/** @var array of function(Presenter $sender, \Exception $exception = NULL); Occurs when the presenter is shutting down */
+	/** @var array of function(Presenter $sender, IPresenterResponse $response = NULL); Occurs when the presenter is shutting down */
 	public $onShutdown;
 
 	/** @var bool (experimental) */
 	public $oldLayoutMode = TRUE;
 
+	/** @var bool (experimental) */
+	public $oldModuleMode = TRUE;
+
 	/** @var PresenterRequest */
 	private $request;
+
+	/** @var IPresenterResponse */
+	private $response;
 
 	/** @var int */
 	private $phase;
@@ -107,7 +112,7 @@ abstract class Presenter extends Control implements IPresenter
 	private $view;
 
 	/** @var string */
-	private $layout = 'layout';
+	private $layout;
 
 	/** @var stdClass */
 	private $payload;
@@ -129,18 +134,6 @@ abstract class Presenter extends Control implements IPresenter
 
 	/** @var array */
 	private $lastCreatedRequestFlag;
-
-
-
-	/**
-	 * @param  PresenterRequest
-	 */
-	public function __construct(PresenterRequest $request)
-	{
-		$this->request = $request;
-		$this->payload = (object) NULL;
-		parent::__construct(NULL, $request->getPresenterName());
-	}
 
 
 
@@ -181,14 +174,18 @@ abstract class Presenter extends Control implements IPresenter
 
 
 	/**
-	 * @return void
-	 * @throws AbortException
+	 * @param  PresenterRequest
+	 * @return IPresenterResponse
 	 */
-	public function run()
+	public function run(PresenterRequest $request)
 	{
 		try {
 			// PHASE 1: STARTUP
 			$this->phase = self::PHASE_STARTUP;
+			$this->request = $request;
+			$this->payload = (object) NULL;
+			$this->setParent($this->getParent(), $request->getPresenterName());
+
 			$this->initGlobalParams();
 			$this->startup();
 			if (!$this->startupCheck) {
@@ -197,6 +194,7 @@ abstract class Presenter extends Control implements IPresenter
 			}
 			// calls $this->action<Action>()
 			$this->tryCall($this->formatActionMethod($this->getAction()), $this->params);
+
 			if ($this->autoCanonicalize) {
 				$this->canonicalize();
 			}
@@ -233,9 +231,7 @@ abstract class Presenter extends Control implements IPresenter
 			}
 
 			// finish template rendering
-			$this->renderTemplate();
-
-			$e = NULL;
+			$this->sendTemplate();
 
 		} catch (AbortException $e) {
 			// continue with shutting down
@@ -244,18 +240,20 @@ abstract class Presenter extends Control implements IPresenter
 			// PHASE 4: SHUTDOWN
 			$this->phase = self::PHASE_SHUTDOWN;
 
-			if ($this->isAjax() && !($e instanceof ForwardingException)) {
-				$this->sendPayload();
+			// back compatibility for use terminate() instead of sendPayload()
+			if ($this->isAjax() && !($this->response instanceof ForwardingResponse || $this->response instanceof JsonResponse) && (array) $this->payload) {
+				try { $this->sendPayload(); }
+				catch (AbortException $e) { }
 			}
 
 			if ($this->hasFlashSession()) {
-				$this->getFlashSession()->setExpiration($e instanceof RedirectingException ? '+ 30 seconds': '+ 3 seconds');
+				$this->getFlashSession()->setExpiration($this->response instanceof RedirectingResponse ? '+ 30 seconds': '+ 3 seconds');
 			}
 
-			$this->onShutdown($this, $e);
-			$this->shutdown($e);
+			$this->onShutdown($this, $this->response);
+			$this->shutdown($this->response);
 
-			if (isset($e)) throw $e;
+			return $this->response;
 		}
 	}
 
@@ -303,10 +301,10 @@ abstract class Presenter extends Control implements IPresenter
 
 
 	/**
-	 * @param  Exception  optional catched exception
+	 * @param  IPresenterResponse  optional catched exception
 	 * @return void
 	 */
-	protected function shutdown($exception)
+	protected function shutdown($response)
 	{
 	}
 
@@ -362,7 +360,7 @@ abstract class Presenter extends Control implements IPresenter
 	 */
 	final public function isSignalReceiver($component, $signal = NULL)
 	{
-		if ($component instanceof /*Nette\*/Component) {
+		if ($component instanceof Component) {
 			$component = $component === $this ? '' : $component->lookupPath(__CLASS__, TRUE);
 		}
 
@@ -430,11 +428,12 @@ abstract class Presenter extends Control implements IPresenter
 	/**
 	 * Changes current view. Any name is allowed.
 	 * @param  string
-	 * @return void
+	 * @return Presenter  provides a fluent interface
 	 */
 	public function setView($view)
 	{
 		$this->view = (string) $view;
+		return $this;
 	}
 
 
@@ -453,11 +452,12 @@ abstract class Presenter extends Control implements IPresenter
 	/**
 	 * Changes or disables layout.
 	 * @param  string|FALSE
-	 * @return void
+	 * @return Presenter  provides a fluent interface
 	 */
 	public function setLayout($layout)
 	{
 		$this->layout = (string) $layout;
+		return $this;
 	}
 
 
@@ -465,17 +465,14 @@ abstract class Presenter extends Control implements IPresenter
 	/**
 	 * @return void
 	 * @throws BadRequestException if no template found
+	 * @throws AbortException
 	 */
-	public function renderTemplate()
+	public function sendTemplate()
 	{
 		$template = $this->getTemplate();
 		if (!$template) return;
 
-		if ($this->isAjax()) { // TODO!
-			/*Nette\Templates\*/SnippetHelper::$outputAllowed = FALSE;
-		}
-
-		if ($template instanceof /*Nette\Templates\*/IFileTemplate && !$template->getFile()) {
+		if ($template instanceof IFileTemplate && !$template->getFile()) {
 
 			// content template
 			$files = $this->formatTemplateFiles($this->getName(), $this->view);
@@ -487,27 +484,40 @@ abstract class Presenter extends Control implements IPresenter
 			}
 
 			if (!$template->getFile()) {
-				$file = str_replace(Environment::getVariable('templatesDir'), "\xE2\x80\xA6", reset($files));
+				$file = str_replace(Environment::getVariable('appDir'), "\xE2\x80\xA6", reset($files));
 				throw new BadRequestException("Page not found. Missing template '$file'.");
 			}
 
 			// layout template
-			if ($this->layout) {
-				foreach ($this->formatLayoutTemplateFiles($this->getName(), $this->layout) as $file) {
+			if ($this->layout !== FALSE) {
+				$files = $this->formatLayoutTemplateFiles($this->getName(), $this->layout ? $this->layout : 'layout');
+				foreach ($files as $file) {
 					if (is_file($file)) {
+						$template->layout = $file;
 						if ($this->oldLayoutMode) {
 							$template->content = clone $template;
 							$template->setFile($file);
 						} else {
-							$template->layout = $template->_extends = $file;
+							$template->_extends = $file;
 						}
 						break;
 					}
 				}
+
+				if (empty($template->layout) && $this->layout !== NULL) {
+					$file = str_replace(Environment::getVariable('appDir'), "\xE2\x80\xA6", reset($files));
+					throw new BadRequestException("Layout not found. Missing template '$file'.");
+				}
 			}
 		}
 
-		$template->render();
+		if ($this->isAjax()) { // TODO!
+			SnippetHelper::$outputAllowed = FALSE;
+			$template->render();
+			$this->sendPayload();
+		}
+
+		$this->terminate(new RenderResponse($template));
 	}
 
 
@@ -520,25 +530,38 @@ abstract class Presenter extends Control implements IPresenter
 	 */
 	public function formatLayoutTemplateFiles($presenter, $layout)
 	{
-		$root = Environment::getVariable('templatesDir');
-		$presenter = str_replace(':', 'Module/', $presenter);
-		$module = substr($presenter, 0, (int) strrpos($presenter, '/'));
-		$base = '';
-		if ($root === Environment::getVariable('presentersDir')) {
-			$base = 'templates/';
-			if ($module === '') {
-				$presenter = 'templates/' . $presenter;
-			} else {
-				$presenter = substr_replace($presenter, '/templates', strrpos($presenter, '/'), 0);
+		if ($this->oldModuleMode) {
+			$root = Environment::getVariable('templatesDir', Environment::getVariable('appDir') . '/templates'); // back compatibility
+			$presenter = str_replace(':', 'Module/', $presenter);
+			$module = substr($presenter, 0, (int) strrpos($presenter, '/'));
+			$base = '';
+			if ($root === Environment::getVariable('appDir') . '/presenters') {
+				$base = 'templates/';
+				if ($module === '') {
+					$presenter = 'templates/' . $presenter;
+				} else {
+					$presenter = substr_replace($presenter, '/templates', strrpos($presenter, '/'), 0);
+				}
 			}
+			return array(
+				"$root/$presenter/@$layout.phtml",
+				"$root/$presenter.@$layout.phtml",
+				"$root/$module/$base@$layout.phtml",
+				"$root/$base@$layout.phtml",
+			);
 		}
 
-		return array(
-			"$root/$presenter/@$layout.phtml",
-			"$root/$presenter.@$layout.phtml",
-			"$root/$module/$base@$layout.phtml",
-			"$root/$base@$layout.phtml",
+		$appDir = Environment::getVariable('appDir');
+		$path = '/' . str_replace(':', 'Module/', $presenter);
+		$pathP = substr_replace($path, '/templates', strrpos($path, '/'), 0);
+		$list = array(
+			"$appDir$pathP/@$layout.phtml",
+			"$appDir$pathP.@$layout.phtml",
 		);
+		while (($path = substr($path, 0, strrpos($path, '/'))) !== FALSE) {
+			$list[] = "$appDir$path/templates/@$layout.phtml";
+		}
+		return $list;
 	}
 
 
@@ -551,18 +574,30 @@ abstract class Presenter extends Control implements IPresenter
 	 */
 	public function formatTemplateFiles($presenter, $view)
 	{
-		$root = Environment::getVariable('templatesDir');
-		$presenter = str_replace(':', 'Module/', $presenter);
-		$dir = '';
-		if ($root === Environment::getVariable('presentersDir')) { // special supported case
-			$pos = strrpos($presenter, '/');
-			$presenter = $pos === FALSE ? 'templates/' . $presenter : substr_replace($presenter, '/templates', $pos, 0);
-			$dir = 'templates/';
+		if ($this->oldModuleMode) {
+			$root = Environment::getVariable('templatesDir', Environment::getVariable('appDir') . '/templates'); // back compatibility
+			$presenter = str_replace(':', 'Module/', $presenter);
+			$dir = '';
+			if ($root === Environment::getVariable('appDir') . '/presenters') { // special supported case
+				$pos = strrpos($presenter, '/');
+				$presenter = $pos === FALSE ? 'templates/' . $presenter : substr_replace($presenter, '/templates', $pos, 0);
+				$dir = 'templates/';
+			}
+			return array(
+				"$root/$presenter/$view.phtml",
+				"$root/$presenter.$view.phtml",
+				"$root/$dir@global.$view.phtml",
+			);
 		}
+
+		$appDir = Environment::getVariable('appDir');
+		$path = '/' . str_replace(':', 'Module/', $presenter);
+		$pathP = substr_replace($path, '/templates', strrpos($path, '/'), 0);
+		$path = substr_replace($path, '/templates', strrpos($path, '/'));
 		return array(
-			"$root/$presenter/$view.phtml",
-			"$root/$presenter.$view.phtml",
-			"$root/$dir@global.$view.phtml",
+			"$appDir$pathP/$view.phtml",
+			"$appDir$pathP.$view.phtml",
+			"$appDir$path/@global.$view.phtml",
 		);
 	}
 
@@ -588,6 +623,16 @@ abstract class Presenter extends Control implements IPresenter
 	protected static function formatRenderMethod($view)
 	{
 		return 'render' . $view;
+	}
+
+
+
+	/**
+	 * @deprecated
+	 */
+	protected function renderTemplate()
+	{
+		throw new DeprecatedException(__METHOD__ . '() is deprecated; use $presenter->sendTemplate() instead.');
 	}
 
 
@@ -623,17 +668,11 @@ abstract class Presenter extends Control implements IPresenter
 	/**
 	 * Sends AJAX payload to the output.
 	 * @return void
+	 * @throws AbortException
 	 */
 	protected function sendPayload()
 	{
-		if ((array) $this->payload) {
-			$httpResponse = $this->getHttpResponse();
-			if ($httpResponse->getHeader('Content-Type') === NULL) {
-				$httpResponse->setContentType('application/json');
-			}
-			$httpResponse->expire(FALSE);
-			echo json_encode($this->payload);
-		}
+		$this->terminate(new JsonResponse($this->payload));
 	}
 
 
@@ -643,7 +682,7 @@ abstract class Presenter extends Control implements IPresenter
 	 */
 	public function getAjaxDriver()
 	{
-		throw new /*\*/DeprecatedException(__METHOD__ . '() is deprecated; use $presenter->payload instead.');
+		throw new DeprecatedException(__METHOD__ . '() is deprecated; use $presenter->payload instead.');
 	}
 
 
@@ -657,12 +696,12 @@ abstract class Presenter extends Control implements IPresenter
 	 * @param  string|PresenterRequest
 	 * @param  array|mixed
 	 * @return void
-	 * @throws ForwardingException
+	 * @throws AbortException
 	 */
 	public function forward($destination, $args = array())
 	{
 		if ($destination instanceof PresenterRequest) {
-			throw new ForwardingException($destination);
+			$this->terminate(new ForwardingResponse($destination));
 
 		} elseif (!is_array($args)) {
 			$args = func_get_args();
@@ -670,7 +709,7 @@ abstract class Presenter extends Control implements IPresenter
 		}
 
 		$this->createRequest($this, $destination, $args, 'forward');
-		throw new ForwardingException($this->lastCreatedRequest);
+		$this->terminate(new ForwardingResponse($this->lastCreatedRequest));
 	}
 
 
@@ -680,20 +719,18 @@ abstract class Presenter extends Control implements IPresenter
 	 * @param  string
 	 * @param  int HTTP error code
 	 * @return void
-	 * @throws RedirectingException
+	 * @throws AbortException
 	 */
 	public function redirectUri($uri, $code = NULL)
 	{
 		if ($this->isAjax()) {
 			$this->payload->redirect = (string) $uri;
-			$this->terminate();
+			$this->sendPayload();
 
-		} else {
-			if (!$code) {
-				$code = $this->getHttpRequest()->isMethod('post') ? /*Nette\Web\*/IHttpResponse::S303_POST_GET : /*Nette\Web\*/IHttpResponse::S302_FOUND;
-			}
-			throw new RedirectingException($uri, $code);
+		} elseif (!$code) {
+			$code = $this->getHttpRequest()->isMethod('post') ? IHttpResponse::S303_POST_GET : IHttpResponse::S302_FOUND;
 		}
+		$this->terminate(new RedirectingResponse($uri, $code));
 	}
 
 
@@ -734,12 +771,14 @@ abstract class Presenter extends Control implements IPresenter
 
 	/**
 	 * Correctly terminates presenter.
+	 * @param  IPresenterResponse
 	 * @return void
-	 * @throws TerminateException
+	 * @throws AbortException
 	 */
-	public function terminate()
+	public function terminate(IPresenterResponse $response = NULL)
 	{
-		throw new TerminateException();
+		$this->response = $response;
+		throw new AbortException();
 	}
 
 
@@ -747,14 +786,14 @@ abstract class Presenter extends Control implements IPresenter
 	/**
 	 * Conditional redirect to canonicalized URI.
 	 * @return void
-	 * @throws RedirectingException
+	 * @throws AbortException
 	 */
 	public function canonicalize()
 	{
 		if (!$this->isAjax() && ($this->request->isMethod('get') || $this->request->isMethod('head'))) {
 			$uri = $this->createRequest($this, $this->action, $this->getGlobalState() + $this->request->params, 'redirectX');
-			if ($uri !== NULL and $uri != $this->getHttpRequest()->getOriginalUri()->absoluteUri) {
-				throw new RedirectingException($uri, /*Nette\Web\*/IHttpResponse::S301_MOVED_PERMANENTLY);
+			if ($uri !== NULL && !$this->getHttpRequest()->getUri()->isEqual($uri)) {
+				$this->terminate(new RedirectingResponse($uri, IHttpResponse::S301_MOVED_PERMANENTLY));
 			}
 		}
 	}
@@ -767,7 +806,7 @@ abstract class Presenter extends Control implements IPresenter
 	 * @param  string strong entity tag validator
 	 * @param  mixed  optional expiration time
 	 * @return int    date of the client's cache version, if available
-	 * @throws TerminateException
+	 * @throws AbortException
 	 */
 	public function lastModified($lastModified, $etag = NULL, $expire = NULL)
 	{
@@ -779,7 +818,7 @@ abstract class Presenter extends Control implements IPresenter
 		$match = FALSE;
 
 		if ($lastModified > 0) {
-			$httpResponse->setHeader('Last-Modified', /*Nette\Web\*/HttpResponse::date($lastModified));
+			$httpResponse->setHeader('Last-Modified', HttpResponse::date($lastModified));
 		}
 
 		if ($etag != NULL) { // intentionally ==
@@ -819,7 +858,7 @@ abstract class Presenter extends Control implements IPresenter
 		}
 
 		if ($match) {
-			$httpResponse->setCode(/*Nette\Web\*/IHttpResponse::S304_NOT_MODIFIED);
+			$httpResponse->setCode(IHttpResponse::S304_NOT_MODIFIED);
 			$httpResponse->setHeader('Content-Length', '0');
 			$this->terminate();
 
@@ -966,18 +1005,18 @@ abstract class Presenter extends Control implements IPresenter
 		if (is_subclass_of($presenterClass, __CLASS__)) {
 			if ($action === '') {
 				/*$action = $presenterClass::$defaultAction;*/ // in PHP 5.3
-				/**/$action = self::$defaultAction;/**/
+				$action = self::$defaultAction;
 			}
 
 			$current = ($action === '*' || $action === $this->action) && $presenterClass === $this->getClass(); // TODO
 
 			if ($args || $destination === 'this') {
 				// counterpart of run() & tryCall()
-				/*$method = $presenterClass::formatActionMethod($action);*/ // in PHP 5.3
-				/**/$method = call_user_func(array($presenterClass, 'formatActionMethod'), $action);/**/
+				 // in PHP 5.3
+				$method = call_user_func(array($presenterClass, 'formatActionMethod'), $action);
 				if (!PresenterHelpers::isMethodCallable($presenterClass, $method)) {
-					/*$method = $presenterClass::formatRenderMethod($action);*/ // in PHP 5.3
-					/**/$method = call_user_func(array($presenterClass, 'formatRenderMethod'), $action);/**/
+					 // in PHP 5.3
+					$method = call_user_func(array($presenterClass, 'formatRenderMethod'), $action);
 					if (!PresenterHelpers::isMethodCallable($presenterClass, $method)) {
 						$method = NULL;
 					}
@@ -1094,7 +1133,7 @@ abstract class Presenter extends Control implements IPresenter
 	 */
 	public static function getPersistentComponents()
 	{
-		return (array) /*Nette\*/Annotations::get(new /*\*/ReflectionClass(/**/func_get_arg(0)/**//*get_called_class()*/), 'persistent');
+		return (array) Annotations::get(new ReflectionClass(func_get_arg(0)), 'persistent');
 	}
 
 
@@ -1109,7 +1148,7 @@ abstract class Presenter extends Control implements IPresenter
 
 		if ($this->globalState === NULL) {
 			if ($this->phase >= self::PHASE_SHUTDOWN) {
-				throw new /*\*/InvalidStateException("Presenter is shutting down, cannot save state.");
+				throw new InvalidStateException("Presenter is shutting down, cannot save state.");
 			}
 
 			$state = array();
@@ -1276,7 +1315,7 @@ abstract class Presenter extends Control implements IPresenter
 
 	/**
 	 * Returns session namespace provided to pass temporary data between redirects.
-	 * @return Nette\Web\SessionNamespace
+	 * @return SessionNamespace
 	 */
 	public function getFlashSession()
 	{
@@ -1293,7 +1332,7 @@ abstract class Presenter extends Control implements IPresenter
 
 
 	/**
-	 * @return HttpRequest
+	 * @return IHttpRequest
 	 */
 	protected function getHttpRequest()
 	{
@@ -1303,7 +1342,7 @@ abstract class Presenter extends Control implements IPresenter
 
 
 	/**
-	 * @return Nette\Web\IHttpResponse
+	 * @return IHttpResponse
 	 */
 	protected function getHttpResponse()
 	{
@@ -1323,7 +1362,7 @@ abstract class Presenter extends Control implements IPresenter
 
 
 	/**
-	 * @return Nette\Web\Session
+	 * @return Session
 	 */
 	private function getSession()
 	{

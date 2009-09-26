@@ -15,14 +15,13 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette
- * @version    $Id: ObjectMixin.php 303 2009-05-05 13:49:32Z david@grudl.com $
  */
 
-/*namespace Nette;*/
 
 
 
-/**/require_once dirname(__FILE__) . '/compatibility.php';/**/
+
+require_once dirname(__FILE__) . '/compatibility.php';
 
 require_once dirname(__FILE__) . '/exceptions.php';
 
@@ -50,7 +49,7 @@ final class ObjectMixin
 	 */
 	final public function __construct()
 	{
-		throw new /*\*/LogicException("Cannot instantiate static class " . get_class($this));
+		throw new LogicException("Cannot instantiate static class " . get_class($this));
 	}
 
 
@@ -61,27 +60,27 @@ final class ObjectMixin
 	 * @param  string  method name
 	 * @param  array   arguments
 	 * @return mixed
-	 * @throws \MemberAccessException
+	 * @throws MemberAccessException
 	 */
 	public static function call($_this, $name, $args)
 	{
 		$class = get_class($_this);
 
 		if ($name === '') {
-			throw new /*\*/MemberAccessException("Call to class '$class' method without name.");
+			throw new MemberAccessException("Call to class '$class' method without name.");
 		}
 
 		// event functionality
 		if (preg_match('#^on[A-Z]#', $name)) {
-			$rp = new /*\*/ReflectionProperty($class, $name);
+			$rp = new ReflectionProperty($class, $name);
 			if ($rp->isPublic() && !$rp->isStatic()) {
 				$list = $_this->$name;
-				if (is_array($list) || $list instanceof /*\*/Traversable) {
+				if (is_array($list) || $list instanceof Traversable) {
 					foreach ($list as $handler) {
-						/**/fixCallback($handler);/**/
+						fixCallback($handler);
 						if (!is_callable($handler)) {
 							$able = is_callable($handler, TRUE, $textual);
-							throw new /*\*/InvalidStateException("Event handler '$textual' is not " . ($able ? 'callable.' : 'valid PHP callback.'));
+							throw new InvalidStateException("Event handler '$textual' is not " . ($able ? 'callable.' : 'valid PHP callback.'));
 						}
 						call_user_func_array($handler, $args);
 					}
@@ -96,7 +95,7 @@ final class ObjectMixin
 			return call_user_func_array($cb, $args);
 		}
 
-		throw new /*\*/MemberAccessException("Call to undefined method $class::$name().");
+		throw new MemberAccessException("Call to undefined method $class::$name().");
 	}
 
 
@@ -111,7 +110,7 @@ final class ObjectMixin
 	 */
 	public static function extensionMethod($class, $name, $callback = NULL)
 	{
-		/**/if (self::$extMethods === NULL || $name === NULL) { // for backwards compatibility
+		if (self::$extMethods === NULL || $name === NULL) { // for backwards compatibility
 			$list = get_defined_functions();
 			foreach ($list['user'] as $fce) {
 				$pair = explode('_prototype_', $fce);
@@ -122,15 +121,15 @@ final class ObjectMixin
 			}
 			if ($name === NULL) return NULL;
 		}
-		/**/
+		
 		$class = strtolower($class);
 		$l = & self::$extMethods[strtolower($name)];
 
 		if ($callback !== NULL) { // works as setter
-			/**/fixCallback($callback);/**/
+			fixCallback($callback);
 			if (!is_callable($callback)) {
 				$able = is_callable($callback, TRUE, $textual);
-				throw new /*\*/InvalidArgumentException("Extension method handler '$textual' is not " . ($able ? 'callable.' : 'valid PHP callback.'));
+				throw new InvalidArgumentException("Extension method handler '$textual' is not " . ($able ? 'callable.' : 'valid PHP callback.'));
 			}
 			$l[$class] = $callback;
 			$l[''] = NULL;
@@ -169,14 +168,14 @@ final class ObjectMixin
 	 *
 	 * @param  string  property name
 	 * @return mixed   property value
-	 * @throws \MemberAccessException if the property is not defined.
+	 * @throws MemberAccessException if the property is not defined.
 	 */
 	public static function & get($_this, $name)
 	{
 		$class = get_class($_this);
 
 		if ($name === '') {
-			throw new /*\*/MemberAccessException("Cannot read a class '$class' property without name.");
+			throw new MemberAccessException("Cannot read a class '$class' property without name.");
 		}
 
 		if (!isset(self::$methods[$class])) {
@@ -205,7 +204,7 @@ final class ObjectMixin
 		}
 
 		$name = func_get_arg(1);
-		throw new /*\*/MemberAccessException("Cannot read an undeclared property $class::\$$name.");
+		throw new MemberAccessException("Cannot read an undeclared property $class::\$$name.");
 	}
 
 
@@ -216,14 +215,14 @@ final class ObjectMixin
 	 * @param  string  property name
 	 * @param  mixed   property value
 	 * @return void
-	 * @throws \MemberAccessException if the property is not defined or is read-only
+	 * @throws MemberAccessException if the property is not defined or is read-only
 	 */
 	public static function set($_this, $name, $value)
 	{
 		$class = get_class($_this);
 
 		if ($name === '') {
-			throw new /*\*/MemberAccessException("Cannot assign to a class '$class' property without name.");
+			throw new MemberAccessException("Cannot assign to a class '$class' property without name.");
 		}
 
 		if (!isset(self::$methods[$class])) {
@@ -240,12 +239,12 @@ final class ObjectMixin
 
 			} else {
 				$name = func_get_arg(1);
-				throw new /*\*/MemberAccessException("Cannot assign to a read-only property $class::\$$name.");
+				throw new MemberAccessException("Cannot assign to a read-only property $class::\$$name.");
 			}
 		}
 
 		$name = func_get_arg(1);
-		throw new /*\*/MemberAccessException("Cannot assign to an undeclared property $class::\$$name.");
+		throw new MemberAccessException("Cannot assign to an undeclared property $class::\$$name.");
 	}
 
 

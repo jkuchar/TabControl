@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette
- * @version    $Id: SmartCachingIterator.php 380 2009-06-26 11:42:11Z david@grudl.com $
  */
 
-/*namespace Nette;*/
+
 
 
 
@@ -35,7 +34,7 @@
  * @property-read bool $odd
  * @property-read bool $even
  */
-class SmartCachingIterator extends /*\*/CachingIterator
+class SmartCachingIterator extends CachingIterator implements Countable
 {
 	/** @var int */
 	private $counter = 0;
@@ -44,17 +43,17 @@ class SmartCachingIterator extends /*\*/CachingIterator
 
 	public function __construct($iterator)
 	{
-		if (is_array($iterator) || $iterator instanceof /*\*/stdClass) {
-			parent::__construct(new /*\*/ArrayIterator($iterator), 0);
+		if (is_array($iterator) || $iterator instanceof stdClass) {
+			parent::__construct(new ArrayIterator($iterator), 0);
 
-		} elseif ($iterator instanceof /*\*/IteratorAggregate) {
+		} elseif ($iterator instanceof IteratorAggregate) {
 			parent::__construct($iterator->getIterator(), 0);
 
-		} elseif ($iterator instanceof /*\*/Iterator) {
+		} elseif ($iterator instanceof Iterator) {
 			parent::__construct($iterator, 0);
 
 		} else {
-			throw new /*\*/InvalidArgumentException("Argument passed to " . __METHOD__ . " must be an array or interface Iterator provider, " . (is_object($iterator) ? get_class($iterator) : gettype($iterator)) ." given.");
+			throw new InvalidArgumentException("Argument passed to " . __METHOD__ . " must be an array or interface Iterator provider, " . (is_object($iterator) ? get_class($iterator) : gettype($iterator)) ." given.");
 		}
 	}
 
@@ -127,6 +126,23 @@ class SmartCachingIterator extends /*\*/CachingIterator
 
 
 	/**
+	 * Returns the count of elements.
+	 * @return int
+	 */
+	public function count()
+	{
+		$inner = $this->getInnerIterator();
+		if ($inner instanceof Countable) {
+			return $inner->count();
+
+		} else {
+			throw new NotSupportedException('Iterator is not countable.');
+		}
+	}
+
+
+
+	/**
 	 * Forwards to the next element.
 	 * @return void
 	 */
@@ -184,7 +200,7 @@ class SmartCachingIterator extends /*\*/CachingIterator
 	 * @param  string  method name
 	 * @param  array   arguments
 	 * @return mixed
-	 * @throws \MemberAccessException
+	 * @throws MemberAccessException
 	 */
 	public function __call($name, $args)
 	{
@@ -198,7 +214,7 @@ class SmartCachingIterator extends /*\*/CachingIterator
 	 *
 	 * @param  string  property name
 	 * @return mixed   property value
-	 * @throws \MemberAccessException if the property is not defined.
+	 * @throws MemberAccessException if the property is not defined.
 	 */
 	public function &__get($name)
 	{
@@ -213,7 +229,7 @@ class SmartCachingIterator extends /*\*/CachingIterator
 	 * @param  string  property name
 	 * @param  mixed   property value
 	 * @return void
-	 * @throws \MemberAccessException if the property is not defined or is read-only
+	 * @throws MemberAccessException if the property is not defined or is read-only
 	 */
 	public function __set($name, $value)
 	{
@@ -240,12 +256,12 @@ class SmartCachingIterator extends /*\*/CachingIterator
 	 *
 	 * @param  string  property name
 	 * @return void
-	 * @throws \MemberAccessException
+	 * @throws MemberAccessException
 	 */
 	public function __unset($name)
 	{
 		$class = get_class($this);
-		throw new /*\*/MemberAccessException("Cannot unset the property $class::\$$name.");
+		throw new MemberAccessException("Cannot unset the property $class::\$$name.");
 	}
 
 

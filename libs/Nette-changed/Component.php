@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette
- * @version    $Id: Component.php 329 2009-05-28 20:18:49Z david@grudl.com $
  */
 
-/*namespace Nette;*/
+
 
 
 
@@ -31,8 +30,7 @@ require_once dirname(__FILE__) . '/Object.php';
 /**
  * Component is the base class for all components.
  *
- * Components are objects implementing IComponent. They has parent component,
- * own name and service locator.
+ * Components are objects implementing IComponent. They has parent component and own name.
  *
  * @author     David Grudl
  * @copyright  Copyright (c) 2004, 2009 David Grudl
@@ -43,16 +41,13 @@ require_once dirname(__FILE__) . '/Object.php';
  */
 abstract class Component extends Object implements IComponent
 {
-	/** @var IServiceLocator */
-	private $serviceLocator;
-
 	/** @var IComponentContainer */
 	private $parent;
 
 	/** @var string */
 	private $name;
 
-	/** @var array of [type => [obj, depth, path, isMonitored?]] or NULL (monitored but not processed yet) */
+	/** @var array of [type => [obj, depth, path, is_monitored?]] */
 	private $monitors = array();
 
 
@@ -79,7 +74,7 @@ abstract class Component extends Object implements IComponent
 	 */
 	public function lookup($type, $need = TRUE)
 	{
-		/**/fixNamespace($type);/**/
+		fixNamespace($type);
 
 		if (!isset($this->monitors[$type])) { // not monitored or not processed yet
 			$obj = $this->parent;
@@ -93,24 +88,16 @@ abstract class Component extends Object implements IComponent
 				if ($obj === $this) $obj = NULL; // prevent cycling
 			}
 
-			$monitored = array_key_exists($type, $this->monitors);
 			if ($obj) {
-				$this->monitors[$type] = array(
-					$obj,
-					$depth,
-					substr($path, 1),
-					$monitored,
-				);
-				if ($monitored) {
-					$this->attached($obj);
-				}
+				$this->monitors[$type] = array($obj, $depth, substr($path, 1), FALSE);
+
 			} else {
-				$this->monitors[$type] = array(NULL, NULL, NULL, $monitored); // not found
+				$this->monitors[$type] = array(NULL, NULL, NULL, FALSE); // not found
 			}
 		}
 
 		if ($need && $this->monitors[$type][0] === NULL) {
-			throw new /*\*/InvalidStateException("Component is not attached to '$type'.");
+			throw new InvalidStateException("Component '$this->name' is not attached to '$type'.");
 		}
 
 		return $this->monitors[$type][0];
@@ -127,7 +114,7 @@ abstract class Component extends Object implements IComponent
 	 */
 	public function lookupPath($type, $need = TRUE)
 	{
-		/**/fixNamespace($type);/**/
+		fixNamespace($type);
 		$this->lookup($type, $need);
 		return $this->monitors[$type][2];
 	}
@@ -141,9 +128,26 @@ abstract class Component extends Object implements IComponent
 	 */
 	public function monitor($type)
 	{
-		/**/fixNamespace($type);/**/
-		$this->monitors[$type] = NULL;
-		$this->lookup($type, FALSE); // call attached()
+		fixNamespace($type);
+		if (empty($this->monitors[$type][3])) {
+			if ($obj = $this->lookup($type, FALSE)) {
+				$this->attached($obj);
+			}
+			$this->monitors[$type][3] = TRUE; // mark as monitored
+		}
+	}
+
+
+
+	/**
+	 * Stops monitoring.
+	 * @param  string class/interface type
+	 * @return void
+	 */
+	public function unmonitor($type)
+	{
+		fixNamespace($type);
+		unset($this->monitors[$type]);
 	}
 
 
@@ -203,29 +207,29 @@ abstract class Component extends Object implements IComponent
 	 *
 	 * @param  IComponentContainer  New parent or null if this component is being removed from a parent
 	 * @param  string
-	 * @return void
-	 * @throws \InvalidStateException
+	 * @return Component  provides a fluent interface
+	 * @throws InvalidStateException
 	 */
 	public function setParent(IComponentContainer $parent = NULL, $name = NULL)
 	{
 		if ($parent === NULL && $this->parent === NULL && $name !== NULL) {
 			$this->name = $name; // just rename
-			return;
+			return $this;
 
 		} elseif ($parent === $this->parent && $name === NULL) {
-			return; // nothing to do
+			return $this; // nothing to do
 		}
 
 		// A component cannot be given a parent if it already has a parent.
 		if ($this->parent !== NULL && $parent !== NULL) {
-			throw new /*\*/InvalidStateException('Component already has a parent.');
+			throw new InvalidStateException("Component '$this->name' already has a parent.");
 		}
 
 		// remove from parent?
 		if ($parent === NULL) {
 			// parent cannot be removed if is still this component contains
 			if ($this->parent->getComponent($this->name, FALSE) === $this) {
-				throw new /*\*/InvalidStateException('The current parent still recognizes this component as its child.');
+				throw new InvalidStateException("The current parent still recognizes component '$this->name' as its child.");
 			}
 
 			$this->refreshMonitors(0);
@@ -234,7 +238,7 @@ abstract class Component extends Object implements IComponent
 		} else { // add to parent
 			// Given parent container does not already recognize this component as its child.
 			if ($parent->getComponent($name, FALSE) !== $this) {
-				throw new /*\*/InvalidStateException('The given parent does not recognize this component as its child.');
+				throw new InvalidStateException("The given parent does not recognize component '$name' as its child.");
 			}
 
 			$this->validateParent($parent);
@@ -244,6 +248,7 @@ abstract class Component extends Object implements IComponent
 			$tmp = array();
 			$this->refreshMonitors(0, $tmp);
 		}
+		return $this;
 	}
 
 
@@ -253,7 +258,7 @@ abstract class Component extends Object implements IComponent
 	 * override this method to disallow a parent change by throwing an \InvalidStateException
 	 * @param  IComponentContainer
 	 * @return void
-	 * @throws \InvalidStateException
+	 * @throws InvalidStateException
 	 */
 	protected function validateParent(IComponentContainer $parent)
 	{
@@ -265,14 +270,15 @@ abstract class Component extends Object implements IComponent
 	 * Refreshes monitors.
 	 * @param  int
 	 * @param  array|NULL (array = attaching, NULL = detaching)
+	 * @param  array
 	 * @return void
 	 */
-	private function refreshMonitors($depth, & $missing = NULL)
+	private function refreshMonitors($depth, & $missing = NULL, & $listeners = array())
 	{
 		if ($this instanceof IComponentContainer) {
 			foreach ($this->getComponents() as $component) {
 				if ($component instanceof Component) {
-					$component->refreshMonitors($depth + 1, $missing);
+					$component->refreshMonitors($depth + 1, $missing, $listeners);
 				}
 			}
 		}
@@ -282,7 +288,7 @@ abstract class Component extends Object implements IComponent
 				if (isset($rec[1]) && $rec[1] > $depth) {
 					if ($rec[3]) { // monitored
 						$this->monitors[$type] = array(NULL, NULL, NULL, TRUE);
-						$this->detached($rec[0]);
+						$listeners[] = array($this, $rec[0]);
 					} else { // not monitored, just randomly cached
 						unset($this->monitors[$type]);
 					}
@@ -301,54 +307,23 @@ abstract class Component extends Object implements IComponent
 					$this->monitors[$type] = array(NULL, NULL, NULL, TRUE);
 
 				} else {
-					$this->monitors[$type] = NULL; // means 'monitored' and forces re-lookup
-					if ($this->lookup($type, FALSE) === NULL) {
+					$this->monitors[$type] = NULL; // forces re-lookup
+					if ($obj = $this->lookup($type, FALSE)) {
+						$listeners[] = array($this, $obj);
+					} else {
 						$missing[$type] = TRUE;
 					}
+					$this->monitors[$type][3] = TRUE; // mark as monitored
 				}
 			}
 		}
-	}
 
-
-
-	/**
-	 * Sets the service location (experimental).
-	 * @param  IServiceLocator
-	 * @return void
-	 */
-	public function setServiceLocator(IServiceLocator $locator)
-	{
-		$this->serviceLocator = $locator;
-	}
-
-
-
-	/**
-	 * Gets the service locator (experimental).
-	 * @return IServiceLocator
-	 */
-	final public function getServiceLocator()
-	{
-		if ($this->serviceLocator === NULL) {
-			$this->serviceLocator = $this->parent === NULL
-				? Environment::getServiceLocator()
-				: $this->parent->getServiceLocator();
+		if ($depth === 0) { // call listeners
+			$method = $missing === NULL ? 'detached' : 'attached';
+			foreach ($listeners as $item) {
+				$item[0]->$method($item[1]);
+			}
 		}
-
-		return $this->serviceLocator;
-	}
-
-
-
-	/**
-	 * Gets the service (experimental).
-	 * @param  string
-	 * @return object
-	 */
-	final public function getService($type)
-	{
-		return $this->getServiceLocator()->getService($type);
 	}
 
 
@@ -384,7 +359,7 @@ abstract class Component extends Object implements IComponent
 	 */
 	final public function __wakeup()
 	{
-		throw new /*\*/NotImplementedException;
+		throw new NotImplementedException;
 	}
 
 }

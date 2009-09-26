@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette
- * @version    $Id: InstanceFilterIterator.php 234 2009-03-26 21:19:54Z david@grudl.com $
  */
 
-/*namespace Nette;*/
+
 
 
 
@@ -29,7 +28,7 @@
  * @copyright  Copyright (c) 2004, 2009 David Grudl
  * @package    Nette
  */
-class InstanceFilterIterator extends /*\*/FilterIterator
+class InstanceFilterIterator extends FilterIterator implements Countable
 {
 	/** @var string */
 	private $type;
@@ -40,7 +39,7 @@ class InstanceFilterIterator extends /*\*/FilterIterator
 	 * @param  Iterator
 	 * @param  string  class/interface name
 	 */
-	public function __construct(/*\*/Iterator $iterator, $type)
+	public function __construct(Iterator $iterator, $type)
 	{
 		$this->type = $type;
 		parent::__construct($iterator);
@@ -55,6 +54,17 @@ class InstanceFilterIterator extends /*\*/FilterIterator
 	public function accept()
 	{
 		return $this->current() instanceof $this->type;
+	}
+
+
+
+	/**
+	 * Returns the count of elements.
+	 * @return int
+	 */
+	public function count()
+	{
+		return iterator_count($this);
 	}
 
 }

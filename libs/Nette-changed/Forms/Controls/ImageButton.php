@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Forms
- * @version    $Id: ImageButton.php 315 2009-05-24 21:20:42Z david@grudl.com $
  */
 
-/*namespace Nette\Forms;*/
+
 
 
 
@@ -42,7 +41,7 @@ class ImageButton extends SubmitButton
 	 */
 	public function __construct($src = NULL, $alt = NULL)
 	{
-		parent::__construct(NULL);
+		parent::__construct();
 		$this->control->type = 'image';
 		$this->control->src = $src;
 		$this->control->alt = $alt;
@@ -51,13 +50,26 @@ class ImageButton extends SubmitButton
 
 
 	/**
+	 * Returns name of control within a Form & INamingContainer scope.
+	 * @return string
+	 */
+	public function getHtmlName()
+	{
+		$name = parent::getHtmlName();
+		return strpos($name, '[') === FALSE ? $name : $name . '[]';
+	}
+
+
+
+	/**
 	 * Loads HTTP data.
-	 * @param  array
 	 * @return void
 	 */
-	public function loadHttpData($data)
+	public function loadHttpData()
 	{
-		$this->value = isset($data[$this->getName() . '_x']);
+		$path = $this->getHtmlName(); // img_x or img['x']
+		$path = strtr(str_replace(']', '', strpos($path, '[') === FALSE ? $path . '.x' : substr($path, 0, -2)), '.', '_');
+		$this->setValue(ArrayTools::get($this->getForm()->getHttpData(), explode('[', $path)) !== NULL);
 	}
 
 }

@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Collections
- * @version    $Id: IMap.php 182 2008-12-31 00:28:33Z david@grudl.com $
  */
 
-/*namespace Nette\Collections;*/
+
 
 
 
@@ -33,7 +32,7 @@ require_once dirname(__FILE__) . '/../Collections/ICollection.php';
  * @copyright  Copyright (c) 2004, 2009 David Grudl
  * @package    Nette\Collections
  */
-interface IMap extends ICollection, /*\*/ArrayAccess
+interface IMap extends ICollection, ArrayAccess
 {
 	function add($key, $value);
 	function search($item);

@@ -15,18 +15,15 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Application
- * @version    $Id: Application.php 406 2009-07-08 22:22:54Z david@grudl.com $
  */
 
-/*namespace Nette\Application;*/
 
-/*use Nette\Environment;*/
+
+
 
 
 
 require_once dirname(__FILE__) . '/../Object.php';
-
-require_once dirname(__FILE__) . '/../Application/ApplicationException.php';
 
 
 
@@ -37,7 +34,7 @@ require_once dirname(__FILE__) . '/../Application/ApplicationException.php';
  * @copyright  Copyright (c) 2004, 2009 David Grudl
  * @package    Nette\Application
  */
-class Application extends /*Nette\*/Object
+class Application extends Object
 {
 	/** @var int */
 	public static $maxLoop = 20;
@@ -67,7 +64,7 @@ class Application extends /*Nette\*/Object
 	public $onError;
 
 	/** @var array of string */
-	public $allowedMethods = array('GET', 'POST', 'HEAD');
+	public $allowedMethods = array('GET', 'POST', 'HEAD', 'PUT', 'DELETE');
 
 	/** @var array of PresenterRequest */
 	private $requests = array();
@@ -75,13 +72,14 @@ class Application extends /*Nette\*/Object
 	/** @var Presenter */
 	private $presenter;
 
-	/** @var Nette\ServiceLocator */
+	/** @var ServiceLocator */
 	private $serviceLocator;
 
 
 
 	/**
 	 * Dispatch a HTTP request to a front controller.
+	 * @return void
 	 */
 	public function run()
 	{
@@ -99,16 +97,17 @@ class Application extends /*Nette\*/Object
 		if ($this->allowedMethods) {
 			$method = $httpRequest->getMethod();
 			if (!in_array($method, $this->allowedMethods, TRUE)) {
-				$httpResponse->setCode(/*Nette\Web\*/IHttpResponse::S501_NOT_IMPLEMENTED);
+				$httpResponse->setCode(IHttpResponse::S501_NOT_IMPLEMENTED);
 				$httpResponse->setHeader('Allow', implode(',', $this->allowedMethods));
 				$method = htmlSpecialChars($method);
-				die("<h1>Method $method is not implemented</h1>");
+				echo "<h1>Method $method is not implemented</h1>";
+				return;
 			}
 		}
 
 		// dispatching
 		$request = NULL;
-		$hasError = FALSE;
+		$repeatedError = FALSE;
 		do {
 			try {
 				if (count($this->requests) > self::$maxLoop) {
@@ -151,30 +150,22 @@ class Application extends /*Nette\*/Object
 					throw new BadRequestException($e->getMessage(), 404, $e);
 				}
 				$request->freeze();
-				$this->presenter = new $class($request);
-
-				// Instantiate topmost service locator
-				$this->presenter->setServiceLocator(new /*Nette\*/ServiceLocator($this->serviceLocator));
 
 				// Execute presenter
-				$this->presenter->run();
+				$this->presenter = new $class;
+				$response = $this->presenter->run($request);
+
+				// Send response
+				if ($response instanceof ForwardingResponse) {
+					$request = $response->getRequest();
+					continue;
+
+				} elseif ($response instanceof IPresenterResponse) {
+					$response->send();
+				}
 				break;
 
-			} catch (RedirectingException $e) {
-				// not error, presenter redirects to new URL
-				$httpResponse->redirect($e->getUri(), $e->getCode());
-				break;
-
-			} catch (ForwardingException $e) {
-				// not error, presenter forwards to new request
-				$request = $e->getRequest();
-
-			} catch (AbortException $e) {
-				// not error, application is correctly terminated
-				unset($e);
-				break;
-
-			} catch (/*\*/Exception $e) {
+			} catch (Exception $e) {
 				// fault barrier
 				if ($this->catchExceptions === NULL) {
 					$this->catchExceptions = Environment::isProduction();
@@ -186,35 +177,36 @@ class Application extends /*Nette\*/Object
 
 				$this->onError($this, $e);
 
-				if ($hasError) {
+				if ($repeatedError) {
 					$e = new ApplicationException('An error occured while executing error-presenter', 0, $e);
+				}
 
-				} elseif ($this->errorPresenter) {
-					$hasError = TRUE;
+				if (!$httpResponse->isSent()) {
+					$httpResponse->setCode($e instanceof BadRequestException ? $e->getCode() : 500);
+				}
+
+				if (!$repeatedError && $this->errorPresenter) {
+					$repeatedError = TRUE;
 					$request = new PresenterRequest(
 						$this->errorPresenter,
 						PresenterRequest::FORWARD,
 						array('exception' => $e)
 					);
-					continue;
-				}
+					// continue
 
-				if ($e instanceof BadRequestException) {
-					if (!$httpResponse->isSent()) {
-						$httpResponse->setCode($e->getCode());
-					}
-					echo "<title>404 Not Found</title>\n\n<h1>Not Found</h1>\n\n<p>The requested URL was not found on this server.</p>";
+				} else { // default error handler
+					echo "<meta name='robots' content='noindex'>\n\n";
+					if ($e instanceof BadRequestException) {
+						echo "<title>404 Not Found</title>\n\n<h1>Not Found</h1>\n\n<p>The requested URL was not found on this server.</p>";
 
-				} else {
-					if (!$httpResponse->isSent()) {
-						$httpResponse->setCode(500);
+					} else {
+						Debug::processException($e, FALSE);
+						echo "<title>500 Internal Server Error</title>\n\n<h1>Server Error</h1>\n\n",
+							"<p>The server encountered an internal error and was unable to complete your request. Please try again later.</p>";
 					}
-					/*Nette\*/Debug::processException($e, FALSE);
-					echo "<title>500 Internal Server Error</title>\n\n<h1>Server Error</h1>\n\n",
-						"<p>The server encountered an internal error and was unable to complete your request. Please try again later.</p>";
+					echo "\n\n<hr>\n<small><i>Nette Framework</i></small>";
+					break;
 				}
-				echo "\n\n<hr>\n<small><i>Nette Framework</i></small>";
-				break;
 			}
 		} while (1);
 
@@ -251,16 +243,16 @@ class Application extends /*Nette\*/Object
 
 	/**
 	 * Gets the service locator (experimental).
-	 * @return Nette\IServiceLocator
+	 * @return IServiceLocator
 	 */
 	final public function getServiceLocator()
 	{
 		if ($this->serviceLocator === NULL) {
-			$this->serviceLocator = new /*Nette\*/ServiceLocator(Environment::getServiceLocator());
+			$this->serviceLocator = new ServiceLocator(Environment::getServiceLocator());
 
 			foreach ($this->defaultServices as $name => $service) {
-				if ($this->serviceLocator->getService($name, FALSE) === NULL) {
-					$this->serviceLocator->addService($service, $name);
+				if (!$this->serviceLocator->hasService($name)) {
+					$this->serviceLocator->addService($name, $service);
 				}
 			}
 		}
@@ -272,12 +264,12 @@ class Application extends /*Nette\*/Object
 	/**
 	 * Gets the service object of the specified type.
 	 * @param  string service name
-	 * @param  bool   throw exception if service doesn't exist?
-	 * @return mixed
+	 * @param  array  options in case service is not singleton
+	 * @return object
 	 */
-	final public function getService($name, $need = TRUE)
+	final public function getService($name, array $options = NULL)
 	{
-		return $this->getServiceLocator()->getService($name, $need);
+		return $this->getServiceLocator()->getService($name, $options);
 	}
 
 
@@ -296,11 +288,12 @@ class Application extends /*Nette\*/Object
 	/**
 	 * Changes router.
 	 * @param  IRouter
-	 * @return void
+	 * @return Application  provides a fluent interface
 	 */
 	public function setRouter(IRouter $router)
 	{
-		$this->getServiceLocator()->addService($router, 'Nette\Application\IRouter');
+		$this->getServiceLocator()->addService('Nette\Application\IRouter', $router);
+		return $this;
 	}
 
 
@@ -348,10 +341,10 @@ class Application extends /*Nette\*/Object
 	{
 		$session = $this->getSession()->getNamespace('Nette.Application/requests');
 		if (isset($session[$key])) {
-			$request = $session[$key];
+			$request = clone $session[$key];
 			unset($session[$key]);
 			$request->setFlag(PresenterRequest::RESTORED, TRUE);
-			throw new ForwardingException($request);
+			$this->presenter->terminate(new ForwardingResponse($request));
 		}
 	}
 
@@ -362,7 +355,7 @@ class Application extends /*Nette\*/Object
 
 
 	/**
-	 * @return Nette\Web\IHttpRequest
+	 * @return IHttpRequest
 	 */
 	protected function getHttpRequest()
 	{
@@ -372,7 +365,7 @@ class Application extends /*Nette\*/Object
 
 
 	/**
-	 * @return Nette\Web\IHttpResponse
+	 * @return IHttpResponse
 	 */
 	protected function getHttpResponse()
 	{
@@ -382,7 +375,7 @@ class Application extends /*Nette\*/Object
 
 
 	/**
-	 * @return Nette\Web\Session
+	 * @return Session
 	 */
 	protected function getSession()
 	{

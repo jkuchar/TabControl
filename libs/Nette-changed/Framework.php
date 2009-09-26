@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette
- * @version    $Id: Framework.php 392 2009-06-29 09:57:07Z david@grudl.com $
  */
 
-/*namespace Nette;*/
+
 
 
 
@@ -35,11 +34,11 @@ final class Framework
 	/**#@+ Nette Framework version identification */
 	const NAME = 'Nette Framework';
 
-	const VERSION = '0.9';
+	const VERSION = '0.9.2-dev';
 
-	const REVISION = '$WCREV$ released on $WCDATE$';
+	const REVISION = 'ea203f7 released on 2009-09-25';
 
-	const PACKAGE = '';
+	const PACKAGE = 'PHP 5.2';
 	/**#@-*/
 
 
@@ -49,7 +48,7 @@ final class Framework
 	 */
 	final public function __construct()
 	{
-		throw new /*\*/LogicException("Cannot instantiate static class " . get_class($this));
+		throw new LogicException("Cannot instantiate static class " . get_class($this));
 	}
 
 

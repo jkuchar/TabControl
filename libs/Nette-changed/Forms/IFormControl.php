@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Forms
- * @version    $Id: IFormControl.php 182 2008-12-31 00:28:33Z david@grudl.com $
  */
 
-/*namespace Nette\Forms;*/
+
 
 
 
@@ -34,10 +33,9 @@ interface IFormControl
 
 	/**
 	 * Loads HTTP data.
-	 * @param  array
 	 * @return void
 	 */
-	function loadHttpData($data);
+	function loadHttpData();
 
 	/**
 	 * Sets control's value.

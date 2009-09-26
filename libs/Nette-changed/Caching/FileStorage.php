@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Caching
- * @version    $Id: FileStorage.php 452 2009-07-22 11:34:12Z david@grudl.com $
  */
 
-/*namespace Nette\Caching;*/
+
 
 
 
@@ -35,17 +34,17 @@ require_once dirname(__FILE__) . '/../Caching/ICacheStorage.php';
  * @copyright  Copyright (c) 2004, 2009 David Grudl
  * @package    Nette\Caching
  */
-class FileStorage extends /*Nette\*/Object implements ICacheStorage
+class FileStorage extends Object implements ICacheStorage
 {
 	/**
 	 * Atomic thread safe logic:
 	 *
 	 * 1) reading: open(r+b), lock(SH), read
-	 *     - delete?: lock(EX), truncate*, unlink*, close
-	 * 2) deleting: open(r+b), lock(EX), truncate*, unlink*, close
+	 *     - delete?: delete*, close
+	 * 2) deleting: open(r+b), delete*, close
 	 * 3) writing: open(r+b || wb), lock(EX), truncate*, write data, write meta, close
 	 *
-	 * *unlink fails in windows
+	 * delete* = lock(EX), try unlink, if fails (on NTFS) { truncate, close, unlink } else close (on ext3)
 	 */
 
 	/**#@+ internal cache file structure */
@@ -56,10 +55,9 @@ class FileStorage extends /*Nette\*/Object implements ICacheStorage
 	const META_PRIORITY = 'priority'; // priority
 	const META_EXPIRE = 'expire'; // expiration timestamp
 	const META_DELTA = 'delta'; // relative (sliding) expiration
-	const META_FILES = 'df'; // array of dependent files (file => timestamp)
 	const META_ITEMS = 'di'; // array of dependent items (file => timestamp)
 	const META_TAGS = 'tags'; // array of tags (tag => [foo])
-	const META_CONSTS = 'consts'; // array of constants (const => [value])
+	const META_CALLBACKS = 'callbacks'; // array of callbacks (function, args)
 	/**#@-*/
 
 	/**#@+ additional cache structure */
@@ -71,21 +69,39 @@ class FileStorage extends /*Nette\*/Object implements ICacheStorage
 	/** @var float  probability that the clean() routine is started */
 	public static $gcProbability = 0.001;
 
+	/** @var bool */
+	public static $useDirectories;
+
 	/** @var string */
 	private $dir;
 
 	/** @var bool */
-	private $useSubdir;
+	private $useDirs;
 
 
 
 	public function __construct($dir)
 	{
-		$this->useSubdir = !ini_get('safe_mode') || !ini_get('safe_mode_gid');
-		$this->dir = $dir;
-		if (!$this->useSubdir && (!is_dir($dir) || !is_writable($dir))) {
-			throw new /*\*/InvalidStateException("Temporary directory '$dir' is not writable.");
+		if (self::$useDirectories === NULL) {
+			self::$useDirectories = !ini_get('safe_mode');
+
+			// checks whether directory is writable
+			$uniq = uniqid();
+			umask(0000);
+			if (!@mkdir("$dir/$uniq", 0777)) { // intentionally @
+				throw new InvalidStateException("Unable to write to directory '$dir'. Make this directory writable.");
+			}
+
+			// tests subdirectory mode
+			if (!self::$useDirectories && @file_put_contents("$dir/$uniq/_", '') !== FALSE) { // intentionally @
+				self::$useDirectories = TRUE;
+				unlink("$dir/$uniq/_");
+			}
+			rmdir("$dir/$uniq");
 		}
+
+		$this->dir = $dir;
+		$this->useDirs = (bool) self::$useDirectories;
 
 		if (mt_rand() / mt_getrandmax() < self::$gcProbability) {
 			$this->clean(array());
@@ -120,10 +136,6 @@ class FileStorage extends /*Nette\*/Object implements ICacheStorage
 	private function verify($meta)
 	{
 		do {
-			/*if (!empty($meta[self::META_DELTA]) || !empty($meta[self::META_FILES])) {
-				clearstatcache();
-			}*/
-
 			if (!empty($meta[self::META_DELTA])) {
 				// meta[file] was added by readMeta()
 				if (filemtime($meta[self::FILE]) + $meta[self::META_DELTA] < time()) break;
@@ -133,16 +145,8 @@ class FileStorage extends /*Nette\*/Object implements ICacheStorage
 				break;
 			}
 
-			if (!empty($meta[self::META_CONSTS])) {
-				foreach ($meta[self::META_CONSTS] as $const => $value) {
-					if (!defined($const) || constant($const) !== $value) break 2;
-				}
-			}
-
-			if (!empty($meta[self::META_FILES])) {
-				foreach ($meta[self::META_FILES] as $depFile => $time) {
-					if (@filemtime($depFile) <> $time) break 2;  // intentionally @
-				}
+			if (!empty($meta[self::META_CALLBACKS]) && !Cache::checkCallbacks($meta[self::META_CALLBACKS])) {
+				break;
 			}
 
 			if (!empty($meta[self::META_ITEMS])) {
@@ -156,11 +160,7 @@ class FileStorage extends /*Nette\*/Object implements ICacheStorage
 			return TRUE;
 		} while (FALSE);
 
-		// meta[handle] was added by readMeta()
-		flock($meta[self::HANDLE], LOCK_EX);
-		ftruncate($meta[self::HANDLE], 0);
-		@unlink($meta[self::FILE]); // intentionally @; meta[file] was added by readMeta()
-		fclose($meta[self::HANDLE]);
+		$this->delete($meta[self::HANDLE], $meta[self::FILE]); // meta[handle] & meta[file] was added by readMeta()
 		return FALSE;
 	}
 
@@ -189,16 +189,10 @@ class FileStorage extends /*Nette\*/Object implements ICacheStorage
 		}
 
 		if (!empty($dp[Cache::EXPIRE])) {
-			$expire = $dp[Cache::EXPIRE];
-			if (is_string($expire) && !is_numeric($expire)) {
-				$expire = strtotime($expire) - time();
-			} elseif ($expire > /*Nette\*/Tools::YEAR) {
-				$expire -= time();
-			}
 			if (empty($dp[Cache::SLIDING])) {
-				$meta[self::META_EXPIRE] = (int) $expire + time(); // absolute time
+				$meta[self::META_EXPIRE] = $dp[Cache::EXPIRE] + time(); // absolute time
 			} else {
-				$meta[self::META_DELTA] = (int) $expire; // sliding time
+				$meta[self::META_DELTA] = (int) $dp[Cache::EXPIRE]; // sliding time
 			}
 		}
 
@@ -215,31 +209,20 @@ class FileStorage extends /*Nette\*/Object implements ICacheStorage
 			}
 		}
 
-		if (!empty($dp[Cache::FILES])) {
-			//clearstatcache();
-			foreach ((array) $dp[Cache::FILES] as $depFile) {
-				$meta[self::META_FILES][$depFile] = @filemtime($depFile); // intentionally @
-			}
-		}
-
-		if (!empty($dp[Cache::CONSTS])) {
-			foreach ((array) $dp[Cache::CONSTS] as $const) {
-				$meta[self::META_CONSTS][$const] = constant($const);
-			}
+		if (!empty($dp[Cache::CALLBACKS])) {
+			$meta[self::META_CALLBACKS] = $dp[Cache::CALLBACKS];
 		}
 
 		$cacheFile = $this->getCacheFile($key);
-		$dir = dirname($cacheFile);
-		if ($this->useSubdir && !is_dir($dir)) {
+		if ($this->useDirs && !is_dir($dir = dirname($cacheFile))) {
 			umask(0000);
-			if (!@mkdir($dir, 0777, TRUE)) {
-				throw new /*\*/InvalidStateException("Unable to create directory '$dir'.");
+			if (!mkdir($dir, 0777, TRUE)) {
+				return FALSE;
 			}
 		}
 		$handle = @fopen($cacheFile, 'r+b'); // intentionally @
 		if (!$handle) {
-			$handle = @fopen($cacheFile, 'wb'); // intentionally @
-
+			$handle = fopen($cacheFile, 'wb'); // intentionally @
 			if (!$handle) {
 				return FALSE;
 			}
@@ -263,9 +246,7 @@ class FileStorage extends /*Nette\*/Object implements ICacheStorage
 			}
 		}
 
-		ftruncate($handle, 0);
-		@unlink($cacheFile); // intentionally @
-		fclose($handle);
+		$this->delete($handle, $cacheFile);
 		return TRUE;
 	}
 
@@ -280,11 +261,9 @@ class FileStorage extends /*Nette\*/Object implements ICacheStorage
 	{
 		$cacheFile = $this->getCacheFile($key);
 		$meta = $this->readMeta($cacheFile, LOCK_EX);
-		if (!$meta) return TRUE;
-
-		ftruncate($meta[self::HANDLE], 0);
-		@unlink($cacheFile); // intentionally @
-		fclose($meta[self::HANDLE]);
+		if ($meta) {
+			$this->delete($meta[self::HANDLE], $cacheFile);
+		}
 		return TRUE;
 	}
 
@@ -335,10 +314,7 @@ class FileStorage extends /*Nette\*/Object implements ICacheStorage
 				continue 2;
 			} while (FALSE);
 
-			flock($meta[self::HANDLE], LOCK_EX);
-			ftruncate($meta[self::HANDLE], 0);
-			@unlink((string) $entry); // intentionally @
-			fclose($meta[self::HANDLE]);
+			$this->delete($meta[self::HANDLE], (string) $entry);
 		}
 
 		return TRUE;
@@ -404,11 +380,31 @@ class FileStorage extends /*Nette\*/Object implements ICacheStorage
 	 */
 	protected function getCacheFile($key)
 	{
-		if ($this->useSubdir) {
+		if ($this->useDirs) {
 			$key = explode(Cache::NAMESPACE_SEPARATOR, $key, 2);
 			return $this->dir . '/c' . (isset($key[1]) ? '-' . urlencode($key[0]) . '/_' . urlencode($key[1]) : '_' . urlencode($key[0]));
 		} else {
 			return $this->dir . '/c_' . urlencode($key);
+		}
+	}
+
+
+
+	/**
+	 * Deletes and closes file.
+	 * @param  resource
+	 * @param  string
+	 * @return void
+	 */
+	private static function delete($handle, $file)
+	{
+		if (@unlink($file)) { // intentionally @
+			fclose($handle);
+		} else {
+			flock($handle, LOCK_EX);
+			ftruncate($handle, 0);
+			fclose($handle);
+			@unlink($file); // intentionally @; not atomic
 		}
 	}
 

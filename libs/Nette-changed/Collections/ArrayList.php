@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Collections
- * @version    $Id: ArrayList.php 320 2009-05-25 15:07:17Z david@grudl.com $
  */
 
-/*namespace Nette\Collections;*/
+
 
 
 
@@ -46,13 +45,13 @@ class ArrayList extends Collection implements IList
 	 * @param  int
 	 * @param  mixed
 	 * @return bool
-	 * @throws \ArgumentOutOfRangeException
+	 * @throws ArgumentOutOfRangeException
 	 */
 	public function insertAt($index, $item)
 	{
 		$index -= $this->base;
 		if ($index < 0 || $index > count($this)) {
-			throw new /*\*/ArgumentOutOfRangeException;
+			throw new ArgumentOutOfRangeException;
 		}
 
 		$this->beforeAdd($item);
@@ -68,7 +67,7 @@ class ArrayList extends Collection implements IList
 	 * Removes the first occurrence of the specified element.
 	 * @param  mixed
 	 * @return bool  true if this list changed as a result of the call
-	 * @throws \NotSupportedException
+	 * @throws NotSupportedException
 	 */
 	public function remove($item)
 	{
@@ -110,7 +109,7 @@ class ArrayList extends Collection implements IList
 	 * @param  int index
 	 * @param  object
 	 * @return void
-	 * @throws \InvalidArgumentException, \NotSupportedException, \ArgumentOutOfRangeException
+	 * @throws InvalidArgumentException, \NotSupportedException, \ArgumentOutOfRangeException
 	 */
 	public function offsetSet($index, $item)
 	{
@@ -122,7 +121,7 @@ class ArrayList extends Collection implements IList
 		} else { // replace
 			$index -= $this->base;
 			if ($index < 0 || $index >= count($this)) {
-				throw new /*\*/ArgumentOutOfRangeException;
+				throw new ArgumentOutOfRangeException;
 			}
 			parent::offsetSet($index, $item);
 		}
@@ -134,13 +133,13 @@ class ArrayList extends Collection implements IList
 	 * Returns item (\ArrayAccess implementation).
 	 * @param  int index
 	 * @return mixed
-	 * @throws \ArgumentOutOfRangeException
+	 * @throws ArgumentOutOfRangeException
 	 */
 	public function offsetGet($index)
 	{
 		$index -= $this->base;
 		if ($index < 0 || $index >= count($this)) {
-			throw new /*\*/ArgumentOutOfRangeException;
+			throw new ArgumentOutOfRangeException;
 		}
 
 		return parent::offsetGet($index);
@@ -165,7 +164,7 @@ class ArrayList extends Collection implements IList
 	 * Removes the element at the specified position in this list.
 	 * @param  int index
 	 * @return void
-	 * @throws \NotSupportedException, \ArgumentOutOfRangeException
+	 * @throws NotSupportedException, \ArgumentOutOfRangeException
 	 */
 	public function offsetUnset($index)
 	{
@@ -173,7 +172,7 @@ class ArrayList extends Collection implements IList
 
 		$index -= $this->base;
 		if ($index < 0 || $index >= count($this)) {
-			throw new /*\*/ArgumentOutOfRangeException;
+			throw new ArgumentOutOfRangeException;
 		}
 
 		$data = $this->getArrayCopy();

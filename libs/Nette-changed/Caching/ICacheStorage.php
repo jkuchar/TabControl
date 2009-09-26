@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Caching
- * @version    $Id: ICacheStorage.php 182 2008-12-31 00:28:33Z david@grudl.com $
  */
 
-/*namespace Nette\Caching;*/
+
 
 
 

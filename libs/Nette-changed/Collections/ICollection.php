@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Collections
- * @version    $Id: ICollection.php 320 2009-05-25 15:07:17Z david@grudl.com $
  */
 
-/*namespace Nette\Collections;*/
+
 
 
 
@@ -29,7 +28,7 @@
  * @copyright  Copyright (c) 2004, 2009 David Grudl
  * @package    Nette\Collections
  */
-interface ICollection extends /*\*/Countable, /*\*/IteratorAggregate
+interface ICollection extends Countable, IteratorAggregate
 {
 	function append($item);
 	function remove($item);

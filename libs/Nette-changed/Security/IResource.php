@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Security
- * @version    $Id: IResource.php 193 2009-01-21 02:53:10Z david@grudl.com $
  */
 
-/*namespace Nette\Security;*/
+
 
 
 

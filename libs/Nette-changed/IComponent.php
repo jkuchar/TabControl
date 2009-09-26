@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette
- * @version    $Id: IComponent.php 182 2008-12-31 00:28:33Z david@grudl.com $
  */
 
-/*namespace Nette;*/
+
 
 
 
@@ -52,18 +51,5 @@ interface IComponent
 	 * @return void
 	 */
 	function setParent(IComponentContainer $parent = NULL, $name = NULL);
-
-	/**
-	 * Sets the service location (EXPERIMENTAL).
-	 * @param  IServiceLocator
-	 * @return void
-	 */
-	function setServiceLocator(IServiceLocator $locator);
-
-	/**
-	 * Gets the service locator (EXPERIMENTAL).
-	 * @return IServiceLocator
-	 */
-	function getServiceLocator();
 
 }

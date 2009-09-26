@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Security
- * @version    $Id: AuthenticationException.php 303 2009-05-05 13:49:32Z david@grudl.com $
  */
 
-/*namespace Nette\Security;*/
+
 
 
 
@@ -29,6 +28,6 @@
  * @copyright  Copyright (c) 2004, 2009 David Grudl
  * @package    Nette\Security
  */
-class AuthenticationException extends /*\*/Exception
+class AuthenticationException extends Exception
 {
 }

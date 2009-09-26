@@ -15,12 +15,11 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Collections
- * @version    $Id: Collection.php 385 2009-06-26 23:25:27Z david@grudl.com $
  */
 
-/*namespace Nette\Collections;*/
 
-/*use Nette\ObjectMixin;*/
+
+
 
 
 
@@ -37,7 +36,7 @@ require_once dirname(__FILE__) . '/../Collections/ICollection.php';
  *
  * @property-read bool $frozen
  */
-abstract class Collection extends /*\*/ArrayObject implements ICollection
+abstract class Collection extends ArrayObject implements ICollection
 {
 	/** @var string  type (class, interface, PHP type) */
 	private $itemType;
@@ -53,7 +52,7 @@ abstract class Collection extends /*\*/ArrayObject implements ICollection
 	/**
 	 * @param  array to wrap
 	 * @param  string class/interface name or ':type'
-	 * @throws \InvalidArgumentException
+	 * @throws InvalidArgumentException
 	 */
 	public function __construct($arr = NULL, $type = NULL)
 	{
@@ -75,7 +74,7 @@ abstract class Collection extends /*\*/ArrayObject implements ICollection
 	 * Appends the specified element to the end of this collection.
 	 * @param  mixed
 	 * @return void
-	 * @throws \InvalidArgumentException
+	 * @throws InvalidArgumentException
 	 */
 	public function append($item)
 	{
@@ -89,7 +88,7 @@ abstract class Collection extends /*\*/ArrayObject implements ICollection
 	 * Removes the first occurrence of the specified element.
 	 * @param  mixed
 	 * @return bool  true if this collection changed as a result of the call
-	 * @throws \NotSupportedException
+	 * @throws NotSupportedException
 	 */
 	public function remove($item)
 	{
@@ -121,7 +120,7 @@ abstract class Collection extends /*\*/ArrayObject implements ICollection
 	/**
 	 * Removes all of the elements from this collection.
 	 * @return void
-	 * @throws \NotSupportedException
+	 * @throws NotSupportedException
 	 */
 	public function clear()
 	{
@@ -147,12 +146,12 @@ abstract class Collection extends /*\*/ArrayObject implements ICollection
 	 * Import from array or any traversable object.
 	 * @param  array|\Traversable
 	 * @return void
-	 * @throws \InvalidArgumentException
+	 * @throws InvalidArgumentException
 	 */
 	public function import($arr)
 	{
-		if (!(is_array($arr) || $arr instanceof /*\*/Traversable)) {
-			throw new /*\*/InvalidArgumentException("Argument must be traversable.");
+		if (!(is_array($arr) || $arr instanceof Traversable)) {
+			throw new InvalidArgumentException("Argument must be traversable.");
 		}
 
 		$this->clear();
@@ -179,7 +178,7 @@ abstract class Collection extends /*\*/ArrayObject implements ICollection
 	 */
 	public function setReadOnly()
 	{
-		throw new /*\*/DeprecatedException(__METHOD__ . '() is deprecated; use freeze() instead.');
+		throw new DeprecatedException(__METHOD__ . '() is deprecated; use freeze() instead.');
 	}
 
 
@@ -189,7 +188,7 @@ abstract class Collection extends /*\*/ArrayObject implements ICollection
 	 */
 	public function isReadOnly()
 	{
-		throw new /*\*/DeprecatedException(__METHOD__ . '() is deprecated; use isFrozen() instead.');
+		throw new DeprecatedException(__METHOD__ . '() is deprecated; use isFrozen() instead.');
 	}
 
 
@@ -202,7 +201,7 @@ abstract class Collection extends /*\*/ArrayObject implements ICollection
 	 * Responds when the item is about to be added to the collection.
 	 * @param  mixed
 	 * @return void
-	 * @throws \InvalidArgumentException, \NotSupportedException
+	 * @throws InvalidArgumentException, \NotSupportedException
 	 */
 	protected function beforeAdd($item)
 	{
@@ -211,12 +210,12 @@ abstract class Collection extends /*\*/ArrayObject implements ICollection
 		if ($this->itemType !== NULL) {
 			if ($this->checkFunc === NULL) {
 				if (!($item instanceof $this->itemType)) {
-					throw new /*\*/InvalidArgumentException("Item must be '$this->itemType' object.");
+					throw new InvalidArgumentException("Item must be '$this->itemType' object.");
 				}
 			} else {
 				$fnc = $this->checkFunc;
 				if (!$fnc($item)) {
-					throw new /*\*/InvalidArgumentException("Item must be $this->itemType type.");
+					throw new InvalidArgumentException("Item must be $this->itemType type.");
 				}
 			}
 		}
@@ -234,7 +233,7 @@ abstract class Collection extends /*\*/ArrayObject implements ICollection
 	 */
 	public function getIterator()
 	{
-		return new /*\*/ArrayIterator($this->getArrayCopy());
+		return new ArrayIterator($this->getArrayCopy());
 	}
 
 
@@ -244,7 +243,7 @@ abstract class Collection extends /*\*/ArrayObject implements ICollection
 	 */
 	public function exchangeArray($array)
 	{
-		throw new /*\*/NotSupportedException('Use ' . __CLASS__ . '::import()');
+		throw new NotSupportedException('Use ' . __CLASS__ . '::import()');
 	}
 
 
@@ -252,11 +251,12 @@ abstract class Collection extends /*\*/ArrayObject implements ICollection
 	/**
 	 * Protected exchangeArray().
 	 * @param  array  new array
-	 * @return void
+	 * @return Collection  provides a fluent interface
 	 */
 	protected function setArray($array)
 	{
 		parent::exchangeArray($array);
+		return $this;
 	}
 
 
@@ -280,7 +280,7 @@ abstract class Collection extends /*\*/ArrayObject implements ICollection
 	/**
 	 * Call to undefined method.
 	 *
-	 * @throws \MemberAccessException
+	 * @throws MemberAccessException
 	 */
 	public function __call($name, $args)
 	{
@@ -292,12 +292,12 @@ abstract class Collection extends /*\*/ArrayObject implements ICollection
 	/**
 	 * Call to undefined static method.
 	 *
-	 * @throws \MemberAccessException
+	 * @throws MemberAccessException
 	 */
 	public static function __callStatic($name, $args)
 	{
 		$class = get_called_class();
-		throw new /*\*/MemberAccessException("Call to undefined static method $class::$name().");
+		throw new MemberAccessException("Call to undefined static method $class::$name().");
 	}
 
 
@@ -305,7 +305,7 @@ abstract class Collection extends /*\*/ArrayObject implements ICollection
 	/**
 	 * Returns property value. Do not call directly.
 	 *
-	 * @throws \MemberAccessException if the property is not defined.
+	 * @throws MemberAccessException if the property is not defined.
 	 */
 	public function &__get($name)
 	{
@@ -317,7 +317,7 @@ abstract class Collection extends /*\*/ArrayObject implements ICollection
 	/**
 	 * Sets value of a property. Do not call directly.
 	 *
-	 * @throws \MemberAccessException if the property is not defined or is read-only
+	 * @throws MemberAccessException if the property is not defined or is read-only
 	 */
 	public function __set($name, $value)
 	{
@@ -342,11 +342,11 @@ abstract class Collection extends /*\*/ArrayObject implements ICollection
 	/**
 	 * Access to undeclared property.
 	 *
-	 * @throws \MemberAccessException
+	 * @throws MemberAccessException
 	 */
 	public function __unset($name)
 	{
-		throw new /*\*/MemberAccessException("Cannot unset the property $this->class::\$$name.");
+		throw new MemberAccessException("Cannot unset the property $this->class::\$$name.");
 	}
 
 
@@ -389,25 +389,13 @@ abstract class Collection extends /*\*/ArrayObject implements ICollection
 
 
 	/**
-	 * Creates a modifiable clone of the object.
-	 * @return void
-	 */
-	public function __wakeup()
-	{
-		// ArrayObject serialization is wrong in PHP 5.2.x
-		$this->frozen = FALSE;
-	}
-
-
-
-	/**
 	 * @return void
 	 */
 	protected function updating()
 	{
 		if ($this->frozen) {
 			$class = get_class($this);
-			throw new /*\*/InvalidStateException("Cannot modify a frozen object '$class'.");
+			throw new InvalidStateException("Cannot modify a frozen object '$class'.");
 		}
 	}
 

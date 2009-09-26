@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette
- * @version    $Id: Image.php 355 2009-06-16 17:31:51Z david@grudl.com $
  */
 
-/*namespace Nette;*/
+
 
 
 
@@ -96,7 +95,7 @@ class Image extends Object
 	public static function fromFile($file, & $format = NULL)
 	{
 		if (!extension_loaded('gd')) {
-			throw new /*\*/Exception("PHP extension GD is not loaded.");
+			throw new Exception("PHP extension GD is not loaded.");
 		}
 
 		$info = @getimagesize($file); // intentionally @
@@ -118,7 +117,7 @@ class Image extends Object
 			if (self::$useImageMagick) {
 				return new ImageMagick($file, $format);
 			}
-			throw new /*\*/Exception("Unknown image type or file '$file' not found.");
+			throw new Exception("Unknown image type or file '$file' not found.");
 		}
 	}
 
@@ -127,10 +126,23 @@ class Image extends Object
 	/**
 	 * Create a new image from the image stream in the string.
 	 * @param  string
+	 * @param  mixed  detected image format
 	 * @return Image
 	 */
-	public static function fromString($s)
+	public static function fromString($s, & $format = NULL)
 	{
+		if (strncmp($s, "\xff\xd8", 2) === 0) {
+			$format = self::JPEG;
+
+		} elseif (strncmp($s, "\x89PNG", 4) === 0) {
+			$format = self::PNG;
+
+		} elseif (strncmp($s, "GIF", 3) === 0) {
+			$format = self::GIF;
+
+		} else {
+			$format = NULL;
+		}
 		return new self(imagecreatefromstring($s));
 	}
 
@@ -146,19 +158,22 @@ class Image extends Object
 	public static function fromBlank($width, $height, $color = NULL)
 	{
 		if (!extension_loaded('gd')) {
-			throw new /*\*/Exception("PHP extension GD is not loaded.");
+			throw new Exception("PHP extension GD is not loaded.");
 		}
 
 		$width = (int) $width;
 		$height = (int) $height;
 		if ($width < 1 || $height < 1) {
-			throw new /*\*/InvalidArgumentException('Image width and height must be greater than zero.');
+			throw new InvalidArgumentException('Image width and height must be greater than zero.');
 		}
 
 		$image = imagecreatetruecolor($width, $height);
 		if (is_array($color)) {
-			$color = imagecolorallocate($image, $color['red'], $color['green'], $color['blue']);
-			imagefilledrectangle($image, 0, 0, $width, $height, $color);
+			$color += array('alpha' => 0);
+			$color = imagecolorallocatealpha($image, $color['red'], $color['green'], $color['blue'], $color['alpha']);
+			imagealphablending($image, FALSE);
+			imagefilledrectangle($image, 0, 0, $width - 1, $height - 1, $color);
+			imagealphablending($image, TRUE);
 		}
 		return new self($image);
 	}
@@ -201,14 +216,15 @@ class Image extends Object
 	/**
 	 * Sets image resource.
 	 * @param  resource
-	 * @return void
+	 * @return Image  provides a fluent interface
 	 */
 	protected function setImageResource($image)
 	{
 		if (!is_resource($image) || get_resource_type($image) !== 'gd') {
-			throw new /*\*/InvalidArgumentException('Image is not valid.');
+			throw new InvalidArgumentException('Image is not valid.');
 		}
 		$this->image = $image;
+		return $this;
 	}
 
 
@@ -234,7 +250,7 @@ class Image extends Object
 	public function resize($newWidth, $newHeight, $flags = 0)
 	{
 		list($newWidth, $newHeight) = $this->calculateSize($newWidth, $newHeight, $flags);
-		$newImage = imagecreatetruecolor($newWidth, $newHeight);
+		$newImage = self::fromBlank($newWidth, $newHeight, self::RGB(0, 0, 0, 127))->getImageResource();
 		imagecopyresampled($newImage, $this->getImageResource(), 0, 0, 0, 0, $newWidth, $newHeight, $this->getWidth(), $this->getHeight());
 		$this->image = $newImage;
 		return $this;
@@ -271,7 +287,7 @@ class Image extends Object
 
 		if ($flags & self::STRETCH) { // non-proportional
 			if ($newWidth < 1 || $newHeight < 1) {
-				throw new /*\*/InvalidArgumentException('For stretching must be both width and height specified.');
+				throw new InvalidArgumentException('For stretching must be both width and height specified.');
 			}
 
 			if (($flags & self::ENLARGE) === 0) {
@@ -281,7 +297,7 @@ class Image extends Object
 
 		} else {  // proportional
 			if ($newWidth < 1 && $newHeight < 1) {
-				throw new /*\*/InvalidArgumentException('At least width or height must be specified.');
+				throw new InvalidArgumentException('At least width or height must be specified.');
 			}
 
 			$scale = array();
@@ -322,7 +338,7 @@ class Image extends Object
 		$width = min((int) $width, $this->getWidth() - $left);
 		$height = min((int) $height, $this->getHeight() - $top);
 
-		$newImage = imagecreatetruecolor($width, $height);
+		$newImage = self::fromBlank($width, $height, self::RGB(0, 0, 0, 127))->getImageResource();
 		imagecopy($newImage, $this->getImageResource(), 0, 0, $left, $top, $width, $height);
 		$this->image = $newImage;
 		return $this;
@@ -413,7 +429,7 @@ class Image extends Object
 			return imagegif($this->getImageResource(), $file);
 
 		default:
-			throw new /*\*/Exception("Unsupported image type.");
+			throw new Exception("Unsupported image type.");
 		}
 	}
 
@@ -443,7 +459,7 @@ class Image extends Object
 		try {
 			return $this->toString();
 
-		} catch (/*\*/Exception $e) {
+		} catch (Exception $e) {
 			trigger_error($e->getMessage(), E_USER_WARNING);
 			return '';
 		}
@@ -460,7 +476,7 @@ class Image extends Object
 	public function send($type = self::JPEG, $quality = NULL)
 	{
 		if ($type !== self::GIF && $type !== self::PNG && $type !== self::JPEG) {
-			throw new /*\*/Exception("Unsupported image type.");
+			throw new Exception("Unsupported image type.");
 		}
 		header('Content-Type: ' . image_type_to_mime_type($type));
 		return $this->save(NULL, $quality, $type);
@@ -474,7 +490,7 @@ class Image extends Object
 	 * @param  string  method name
 	 * @param  array   arguments
 	 * @return mixed
-	 * @throws \MemberAccessException
+	 * @throws MemberAccessException
 	 */
 	public function __call($name, $args)
 	{
@@ -490,7 +506,8 @@ class Image extends Object
 			}
 			array_unshift($args, $this->getImageResource());
 
-			return call_user_func_array($function, $args);
+			$res = call_user_func_array($function, $args);
+			return is_resource($res) ? new self($res) : $res;
 		}
 
 		return parent::__call($name, $args);

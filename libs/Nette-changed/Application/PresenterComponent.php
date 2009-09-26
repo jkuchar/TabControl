@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Application
- * @version    $Id: PresenterComponent.php 410 2009-07-13 18:58:40Z david@grudl.com $
  */
 
-/*namespace Nette\Application;*/
+
 
 
 
@@ -43,7 +42,7 @@ require_once dirname(__FILE__) . '/../Application/IStatePersistent.php';
  *
  * @property-read Presenter $presenter
  */
-abstract class PresenterComponent extends /*Nette\*/ComponentContainer implements ISignalReceiver, IStatePersistent
+abstract class PresenterComponent extends ComponentContainer implements ISignalReceiver, IStatePersistent, ArrayAccess
 {
 	/** @var array */
 	protected $params = array();
@@ -52,7 +51,7 @@ abstract class PresenterComponent extends /*Nette\*/ComponentContainer implement
 
 	/**
 	 */
-	public function __construct(/*Nette\*/IComponentContainer $parent = NULL, $name = NULL)
+	public function __construct(IComponentContainer $parent = NULL, $name = NULL)
 	{
 		$this->monitor('Nette\Application\Presenter');
 		parent::__construct($parent, $name);
@@ -167,7 +166,7 @@ abstract class PresenterComponent extends /*Nette\*/ComponentContainer implement
 			}
 
 			if (is_object($val)) {
-				throw new /*\*/InvalidStateException("Persistent parameter must be scalar or array, '$this->class::\$$nm' is " . gettype($val));
+				throw new InvalidStateException("Persistent parameter must be scalar or array, '$this->class::\$$nm' is " . gettype($val));
 
 			} else {
 				if (isset($meta['def'])) {
@@ -224,10 +223,10 @@ abstract class PresenterComponent extends /*Nette\*/ComponentContainer implement
 	 */
 	public static function getPersistentParams()
 	{
-		$rc = new /*\*/ReflectionClass(/**/func_get_arg(0)/**//*get_called_class()*/);
+		$rc = new ReflectionClass(func_get_arg(0));
 		$params = array();
 		foreach ($rc->getProperties() as $rp) {
-			if ($rp->isPublic() && !$rp->isStatic() && /*Nette\*/Annotations::get($rp, 'persistent')) {
+			if ($rp->isPublic() && !$rp->isStatic() && Annotations::get($rp, 'persistent')) {
 				$params[] = $rp->getName();
 			}
 		}
@@ -318,7 +317,7 @@ abstract class PresenterComponent extends /*Nette\*/ComponentContainer implement
 	 */
 	public function ajaxLink($destination, $args = array())
 	{
-		throw new /*\*/DeprecatedException(__METHOD__ . '() is deprecated.');
+		throw new DeprecatedException(__METHOD__ . '() is deprecated.');
 	}
 
 
@@ -329,7 +328,7 @@ abstract class PresenterComponent extends /*Nette\*/ComponentContainer implement
 	 * @param  string   destination in format "[[module:]presenter:]view" or "signal!"
 	 * @param  array|mixed
 	 * @return void
-	 * @throws RedirectingException
+	 * @throws AbortException
 	 */
 	public function redirect($code, $destination = NULL, $args = array())
 	{
@@ -346,6 +345,63 @@ abstract class PresenterComponent extends /*Nette\*/ComponentContainer implement
 
 		$presenter = $this->getPresenter();
 		$presenter->redirectUri($presenter->createRequest($this, $destination, $args, 'redirect'), $code);
+	}
+
+
+
+	/********************* interface \ArrayAccess ****************d*g**/
+
+
+
+	/**
+	 * Adds the component to the container.
+	 * @param  string  component name
+	 * @param  IComponent
+	 * @return void.
+	 */
+	final public function offsetSet($name, $component)
+	{
+		$this->addComponent($component, $name);
+	}
+
+
+
+	/**
+	 * Returns component specified by name. Throws exception if component doesn't exist.
+	 * @param  string  component name
+	 * @return IComponent
+	 * @throws InvalidArgumentException
+	 */
+	final public function offsetGet($name)
+	{
+		return $this->getComponent($name, TRUE);
+	}
+
+
+
+	/**
+	 * Does component specified by name exists?
+	 * @param  string  component name
+	 * @return bool
+	 */
+	final public function offsetExists($name)
+	{
+		return $this->getComponent($name, FALSE) !== NULL;
+	}
+
+
+
+	/**
+	 * Removes component from the container. Throws exception if component doesn't exist.
+	 * @param  string  component name
+	 * @return void
+	 */
+	final public function offsetUnset($name)
+	{
+		$component = $this->getComponent($name, FALSE);
+		if ($component !== NULL) {
+			$this->removeComponent($component);
+		}
 	}
 
 }

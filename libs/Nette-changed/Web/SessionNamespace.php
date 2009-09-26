@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Web
- * @version    $Id: SessionNamespace.php 318 2009-05-25 02:11:48Z david@grudl.com $
  */
 
-/*namespace Nette\Web;*/
+
 
 
 
@@ -33,7 +32,7 @@ require_once dirname(__FILE__) . '/../Object.php';
  * @copyright  Copyright (c) 2004, 2009 David Grudl
  * @package    Nette\Web
  */
-final class SessionNamespace extends /*Nette\*/Object implements /*\*/IteratorAggregate, /*\*/ArrayAccess
+final class SessionNamespace extends Object implements IteratorAggregate, ArrayAccess
 {
 	/** @var array  session data storage */
 	private $data;
@@ -59,14 +58,14 @@ final class SessionNamespace extends /*Nette\*/Object implements /*\*/IteratorAg
 
 	/**
 	 * Returns an iterator over all namespace variables.
-	 * @return \ArrayIterator
+	 * @return ArrayIterator
 	 */
 	public function getIterator()
 	{
 		if (isset($this->data)) {
-			return new /*\*/ArrayIterator($this->data);
+			return new ArrayIterator($this->data);
 		} else {
-			return new /*\*/ArrayIterator;
+			return new ArrayIterator;
 		}
 	}
 
@@ -186,7 +185,7 @@ final class SessionNamespace extends /*Nette\*/Object implements /*\*/IteratorAg
 	 * Sets the expiration of the namespace or specific variables.
 	 * @param  mixed   time in seconds, value 0 means "until the browser is closed"
 	 * @param  mixed   optional list of variables / single variable to expire
-	 * @return void
+	 * @return SessionNamespace  provides a fluent interface
 	 */
 	public function setExpiration($seconds, $variables = NULL)
 	{
@@ -198,7 +197,7 @@ final class SessionNamespace extends /*Nette\*/Object implements /*\*/IteratorAg
 		if ($seconds <= 0) {
 			$seconds = 0;
 
-		} elseif ($seconds <= /*Nette\*/Tools::YEAR) {
+		} elseif ($seconds <= Tools::YEAR) {
 			$seconds += time();
 		}
 
@@ -215,6 +214,7 @@ final class SessionNamespace extends /*Nette\*/Object implements /*\*/IteratorAg
 		} else {
 			$this->meta['EXP'][$variables] = array($seconds, $whenBrowserIsClosed);
 		}
+		return $this;
 	}
 
 

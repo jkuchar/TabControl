@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Templates
- * @version    $Id: TemplateCacheStorage.php 451 2009-07-21 23:56:06Z david@grudl.com $
  */
 
-/*namespace Nette\Templates;*/
+
 
 
 
@@ -33,7 +32,7 @@ require_once dirname(__FILE__) . '/../Caching/FileStorage.php';
  * @copyright  Copyright (c) 2004, 2009 David Grudl
  * @package    Nette\Templates
  */
-class TemplateCacheStorage extends /*Nette\Caching\*/FileStorage
+class TemplateCacheStorage extends FileStorage
 {
 
 	/**

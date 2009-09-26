@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Config
- * @version    $Id: Config.php 321 2009-05-25 15:54:01Z david@grudl.com $
  */
 
-/*namespace Nette\Config;*/
+
 
 
 
@@ -33,7 +32,7 @@ require_once dirname(__FILE__) . '/../Collections/Hashtable.php';
  * @copyright  Copyright (c) 2004, 2009 David Grudl
  * @package    Nette\Config
  */
-class Config extends /*Nette\Collections\*/Hashtable
+class Config extends Hashtable
 {
 	/**#@+ flag */
 	const READONLY = 1;
@@ -42,8 +41,8 @@ class Config extends /*Nette\Collections\*/Hashtable
 
 	/** @var array */
 	private static $extensions = array(
-		'ini' => /*Nette\Config\*/'ConfigAdapterIni',
-		'xml' => /*Nette\Config\*/'ConfigAdapterXml',
+		'ini' => 'ConfigAdapterIni',
+		'xml' => 'ConfigAdapterXml',
 	);
 
 
@@ -57,12 +56,12 @@ class Config extends /*Nette\Collections\*/Hashtable
 	public static function registerExtension($extension, $class)
 	{
 		if (!class_exists($class)) {
-			throw new /*\*/InvalidArgumentException("Class '$class' was not found.");
+			throw new InvalidArgumentException("Class '$class' was not found.");
 		}
 
-		$reflection = new /*\*/ReflectionClass($class);
-		if (!$reflection->implementsInterface(/*Nette\Config\*/'IConfigAdapter')) {
-			throw new /*\*/InvalidArgumentException("Configuration adapter '$class' is not Nette\\Config\\IConfigAdapter implementor.");
+		$reflection = new ReflectionClass($class);
+		if (!$reflection->implementsInterface('IConfigAdapter')) {
+			throw new InvalidArgumentException("Configuration adapter '$class' is not Nette\\Config\\IConfigAdapter implementor.");
 		}
 
 		self::$extensions[strtolower($extension)] = $class;
@@ -82,10 +81,10 @@ class Config extends /*Nette\Collections\*/Hashtable
 		$extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
 		if (isset(self::$extensions[$extension])) {
 			$arr = call_user_func(array(self::$extensions[$extension], 'load'), $file, $section);
-			return new /**/self/**//*static*/($arr, $flags);
+			return new self($arr, $flags);
 
 		} else {
-			throw new /*\*/InvalidArgumentException("Unknown file extension '$file'.");
+			throw new InvalidArgumentException("Unknown file extension '$file'.");
 		}
 	}
 
@@ -93,7 +92,7 @@ class Config extends /*Nette\Collections\*/Hashtable
 
 	/**
 	 * @param  array to wrap
-	 * @throws \InvalidArgumentException
+	 * @throws InvalidArgumentException
 	 */
 	public function __construct($arr = NULL, $flags = self::READONLY)
 	{
@@ -125,7 +124,7 @@ class Config extends /*Nette\Collections\*/Hashtable
 			return call_user_func(array(self::$extensions[$extension], 'save'), $this, $file, $section);
 
 		} else {
-			throw new /*\*/InvalidArgumentException("Unknown file extension '$file'.");
+			throw new InvalidArgumentException("Unknown file extension '$file'.");
 		}
 	}
 
@@ -146,7 +145,7 @@ class Config extends /*Nette\Collections\*/Hashtable
 		$data = $this->getArrayCopy();
 		foreach ($data as $key => $val) {
 			if (is_string($val)) {
-				$data[$key] = /*Nette\*/Environment::expand($val);
+				$data[$key] = Environment::expand($val);
 			} elseif ($val instanceof self) {
 				$val->expand();
 			}
@@ -160,7 +159,7 @@ class Config extends /*Nette\Collections\*/Hashtable
 	 * Import from array or any traversable object.
 	 * @param  array|\Traversable
 	 * @return void
-	 * @throws \InvalidArgumentException
+	 * @throws InvalidArgumentException
 	 */
 	public function import($arr)
 	{

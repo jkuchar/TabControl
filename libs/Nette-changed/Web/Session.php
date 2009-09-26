@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Web
- * @version    $Id: Session.php 454 2009-07-22 19:13:35Z david@grudl.com $
  */
 
-/*namespace Nette\Web;*/
+
 
 
 
@@ -33,7 +32,7 @@ require_once dirname(__FILE__) . '/../Object.php';
  * @copyright  Copyright (c) 2004, 2009 David Grudl
  * @package    Nette\Web
  */
-class Session extends /*Nette\*/Object
+class Session extends Object
 {
 	/** Default file lifetime is 3 hours */
 	const DEFAULT_FILE_LIFETIME = 10800;
@@ -48,26 +47,26 @@ class Session extends /*Nette\*/Object
 	private static $started;
 
 	/** @var array default configuration */
-	private static $defaultConfig = array(
+	private $options = array(
 		// security
-		'session.referer_check' => '',    // must be disabled because PHP implementation is invalid
-		'session.use_cookies' => 1,       // must be enabled to prevent Session Hijacking and Fixation
-		'session.use_only_cookies' => 1,  // must be enabled to prevent Session Fixation
-		'session.use_trans_sid' => 0,     // must be disabled to prevent Session Hijacking and Fixation
+		'referer_check' => '',    // must be disabled because PHP implementation is invalid
+		'use_cookies' => 1,       // must be enabled to prevent Session Hijacking and Fixation
+		'use_only_cookies' => 1,  // must be enabled to prevent Session Fixation
+		'use_trans_sid' => 0,     // must be disabled to prevent Session Hijacking and Fixation
 
 		// cookies
-		'session.cookie_lifetime' => 0,   // until the browser is closed
-		'session.cookie_path' => '/',     // cookie is available within the entire domain
-		'session.cookie_domain' => '',    // cookie is available on current subdomain only
-		'session.cookie_secure' => FALSE, // cookie is available on HTTP & HTTPS
-		'session.cookie_httponly' => TRUE,// must be enabled to prevent Session Fixation
+		'cookie_lifetime' => 0,   // until the browser is closed
+		'cookie_path' => '/',     // cookie is available within the entire domain
+		'cookie_domain' => '',    // cookie is available on current subdomain only
+		'cookie_secure' => FALSE, // cookie is available on HTTP & HTTPS
+		'cookie_httponly' => TRUE,// must be enabled to prevent Session Fixation
 
 		// other
-		'session.gc_maxlifetime' => self::DEFAULT_FILE_LIFETIME,// 3 hours
-		'session.cache_limiter' => NULL,  // (default "nocache", special value "\0")
-		'session.cache_expire' => NULL,   // (default "180")
-		'session.hash_function' => NULL,  // (default "0", means MD5)
-		'session.hash_bits_per_character' => NULL, // (default "4")
+		'gc_maxlifetime' => self::DEFAULT_FILE_LIFETIME,// 3 hours
+		'cache_limiter' => NULL,  // (default "nocache", special value "\0")
+		'cache_expire' => NULL,   // (default "180")
+		'hash_function' => NULL,  // (default "0", means MD5)
+		'hash_bits_per_character' => NULL, // (default "4")
 	);
 
 
@@ -81,37 +80,41 @@ class Session extends /*Nette\*/Object
 
 	/**
 	 * Starts and initializes session data.
-	 * @throws \InvalidStateException
+	 * @throws InvalidStateException
 	 * @return void
 	 */
 	public function start()
 	{
 		if (self::$started) {
-			throw new /*\*/InvalidStateException('Session has already been started.');
+			throw new InvalidStateException('Session has already been started.');
 
 		} elseif (self::$started === NULL && defined('SID')) {
-			throw new /*\*/InvalidStateException('A session had already been started by session.auto-start or session_start().');
+			throw new InvalidStateException('A session had already been started by session.auto-start or session_start().');
 		}
 
 
 		// additional protection against Session Hijacking & Fixation
 		if ($this->verificationKeyGenerator) {
-			/**/fixCallback($this->verificationKeyGenerator);/**/
+			fixCallback($this->verificationKeyGenerator);
 			if (!is_callable($this->verificationKeyGenerator)) {
 				$able = is_callable($this->verificationKeyGenerator, TRUE, $textual);
-				throw new /*\*/InvalidStateException("Verification key generator '$textual' is not " . ($able ? 'callable.' : 'valid PHP callback.'));
+				throw new InvalidStateException("Verification key generator '$textual' is not " . ($able ? 'callable.' : 'valid PHP callback.'));
 			}
 		}
 
 
 		// start session
-		$this->configure(self::$defaultConfig, FALSE);
+		try {
+			$this->configure($this->options);
+		} catch (NotSupportedException $e) {
+			// ignore?
+		}
 
-		/*Nette\*/Tools::tryError();
+		Tools::tryError();
 		session_start();
-		if (/*Nette\*/Tools::catchError($msg)) {
+		if (Tools::catchError($msg)) {
 			@session_write_close(); // this is needed
-			throw new /*\*/InvalidStateException($msg);
+			throw new InvalidStateException($msg);
 		}
 
 		self::$started = TRUE;
@@ -127,7 +130,7 @@ class Session extends /*Nette\*/Object
 		*/
 
 		// initialize structures
-		$verKey = $this->verificationKeyGenerator ? (string) call_user_func($this->verificationKeyGenerator) : '';
+		$verKey = $this->verificationKeyGenerator ? (string) call_user_func($this->verificationKeyGenerator) : NULL;
 		if (!isset($_SESSION['__NT']['V'])) { // new session
 			$_SESSION['__NT'] = array();
 			$_SESSION['__NT']['C'] = 0;
@@ -135,7 +138,7 @@ class Session extends /*Nette\*/Object
 
 		} else {
 			$saved = & $_SESSION['__NT']['V'];
-			if ($saved === $verKey) { // verified
+			if ($verKey == NULL || $verKey === $saved) { // verified
 				$_SESSION['__NT']['C']++;
 
 			} else { // session attack?
@@ -218,7 +221,7 @@ class Session extends /*Nette\*/Object
 	public function destroy()
 	{
 		if (!self::$started) {
-			throw new /*\*/InvalidStateException('Session is not started.');
+			throw new InvalidStateException('Session is not started.');
 		}
 
 		session_destroy();
@@ -245,16 +248,15 @@ class Session extends /*Nette\*/Object
 
 	/**
 	 * Regenerates the session ID.
-	 * @throws \InvalidStateException
+	 * @throws InvalidStateException
 	 * @return void
 	 */
 	public function regenerateId()
 	{
 		if (self::$started) {
 			if (headers_sent($file, $line)) {
-				throw new /*\*/InvalidStateException("Cannot regenerate session ID after HTTP headers have been sent" . ($file ? " (output started at $file:$line)." : "."));
+				throw new InvalidStateException("Cannot regenerate session ID after HTTP headers have been sent" . ($file ? " (output started at $file:$line)." : "."));
 			}
-			$_SESSION['__NT']['V'] = $this->verificationKeyGenerator ? (string) call_user_func($this->verificationKeyGenerator) : '';
 			session_regenerate_id(TRUE);
 
 		} else {
@@ -278,16 +280,16 @@ class Session extends /*Nette\*/Object
 	/**
 	 * Sets the session name to a specified one.
 	 * @param  string
-	 * @return void
+	 * @return Session  provides a fluent interface
 	 */
 	public function setName($name)
 	{
 		if (!is_string($name) || !preg_match('#[^0-9.][^.]*$#A', $name)) {
-			throw new /*\*/InvalidArgumentException('Session name must be a string and cannot contain dot.');
+			throw new InvalidArgumentException('Session name must be a string and cannot contain dot.');
 		}
 
-		$this->configure(array(
-			'session.name' => $name,
+		return $this->setOptions(array(
+			'name' => $name,
 		));
 	}
 
@@ -310,11 +312,13 @@ class Session extends /*Nette\*/Object
 	 */
 	public function generateVerificationKey()
 	{
-		$list = array('Accept-Charset', 'Accept-Encoding', 'Accept-Language', 'User-Agent');
-		$key = array();
 		$httpRequest = $this->getHttpRequest();
-		foreach ($list as $header) {
-			$key[] = $httpRequest->getHeader($header);
+		$key[] = $httpRequest->getHeader('Accept-Charset');
+		$key[] = $httpRequest->getHeader('Accept-Encoding');
+		$key[] = $httpRequest->getHeader('Accept-Language');
+		$key[] = $httpRequest->getHeader('User-Agent');
+		if (strpos($key[3], 'MSIE 8.0')) { // IE 8 AJAX bug
+			$key[2] = substr($key[2], 0, 2);
 		}
 		return md5(implode("\0", $key));
 	}
@@ -330,12 +334,12 @@ class Session extends /*Nette\*/Object
 	 * @param  string
 	 * @param  string
 	 * @return SessionNamespace
-	 * @throws \InvalidArgumentException
+	 * @throws InvalidArgumentException
 	 */
-	public function getNamespace($namespace, $class = /*Nette\Web\*/'SessionNamespace')
+	public function getNamespace($namespace, $class = 'SessionNamespace')
 	{
 		if (!is_string($namespace) || $namespace === '') {
-			throw new /*\*/InvalidArgumentException('Session namespace must be a non-empty string.');
+			throw new InvalidArgumentException('Session namespace must be a non-empty string.');
 		}
 
 		if (!self::$started) {
@@ -365,7 +369,7 @@ class Session extends /*Nette\*/Object
 
 	/**
 	 * Iteration over all namespaces.
-	 * @return \ArrayIterator
+	 * @return ArrayIterator
 	 */
 	public function getIterator()
 	{
@@ -374,10 +378,10 @@ class Session extends /*Nette\*/Object
 		}
 
 		if (isset($_SESSION['__NS'])) {
-			return new /*\*/ArrayIterator(array_keys($_SESSION['__NS']));
+			return new ArrayIterator(array_keys($_SESSION['__NS']));
 
 		} else {
-			return new /*\*/ArrayIterator;
+			return new ArrayIterator;
 		}
 	}
 
@@ -425,47 +429,74 @@ class Session extends /*Nette\*/Object
 
 
 	/**
+	 * Sets session options.
+	 * @param  array
+	 * @return Session  provides a fluent interface
+	 * @throws NotSupportedException
+	 * @throws InvalidStateException
+	 */
+	public function setOptions(array $options)
+	{
+		if (self::$started) {
+			$this->configure($options);
+		}
+		$this->options = $options + $this->options;
+		return $this;
+	}
+
+
+
+	/**
+	 * Returns all session options.
+	 * @return array
+	 */
+	public function getOptions()
+	{
+		return $this->options;
+	}
+
+
+
+	/**
 	 * Configurates session environment.
 	 * @param  array
-	 * @param  bool   throw exception?
 	 * @return void
-	 * @throws \NotSupportedException
-	 * @throws \InvalidStateException
 	 */
-	public function configure(array $config, $throwException = TRUE)
+	private function configure(array $config)
 	{
-		$special = array('session.cache_expire' => 1, 'session.cache_limiter' => 1,
-			'session.save_path' => 1, 'session.name' => 1);
+		$special = array('cache_expire' => 1, 'cache_limiter' => 1, 'save_path' => 1, 'name' => 1);
 
 		foreach ($config as $key => $value) {
-			unset(self::$defaultConfig[$key]); // prevents overwriting
+			if (!strncmp($key, 'session.', 8)) { // back compatibility
+				$key = substr($key, 8);
+			}
 
 			if ($value === NULL) {
 				continue;
 
 			} elseif (isset($special[$key])) {
 				if (self::$started) {
-					throw new /*\*/InvalidStateException('Session has already been started.');
+					throw new InvalidStateException("Unable to set '$key' when session has been started.");
 				}
-				$key = strtr($key, '.', '_');
+				$key = "session_$key";
 				$key($value);
 
-			} elseif (strncmp($key, 'session.cookie_', 15) === 0) {
+			} elseif (strncmp($key, 'cookie_', 7) === 0) {
 				if (!isset($cookie)) {
 					$cookie = session_get_cookie_params();
 				}
-				$cookie[substr($key, 15)] = $value;
+				$cookie[substr($key, 7)] = $value;
 
 			} elseif (!function_exists('ini_set')) {
-				if ($throwException && ini_get($key) != $value) { // intentionally ==
-					throw new /*\*/NotSupportedException('Required function ini_set() is disabled.');
+				if (ini_get($key) != $value) { // intentionally ==
+					throw new NotSupportedException('Required function ini_set() is disabled.');
 				}
 
 			} else {
 				if (self::$started) {
-					throw new /*\*/InvalidStateException('Session has already been started.');
+					throw new InvalidStateException("Unable to set '$key' when session has been started.");
 				}
-				ini_set($key, $value);
+				ini_set("session.$key", $value);
 			}
 		}
 
@@ -482,7 +513,7 @@ class Session extends /*Nette\*/Object
 	/**
 	 * Sets the amount of time allowed between requests before the session will be terminated.
 	 * @param  mixed  number of seconds, value 0 means "until the browser is closed"
-	 * @return void
+	 * @return Session  provides a fluent interface
 	 */
 	public function setExpiration($seconds)
 	{
@@ -491,18 +522,18 @@ class Session extends /*Nette\*/Object
 		}
 
 		if ($seconds <= 0) {
-			$this->configure(array(
-				'session.gc_maxlifetime' => self::DEFAULT_FILE_LIFETIME,
-				'session.cookie_lifetime' => 0,
+			return $this->setOptions(array(
+				'gc_maxlifetime' => self::DEFAULT_FILE_LIFETIME,
+				'cookie_lifetime' => 0,
 			));
 
 		} else {
-			if ($seconds > /*Nette\*/Tools::YEAR) {
+			if ($seconds > Tools::YEAR) {
 				$seconds -= time();
 			}
-			$this->configure(array(
-				'session.gc_maxlifetime' => $seconds,
-				'session.cookie_lifetime' => $seconds,
+			return $this->setOptions(array(
+				'gc_maxlifetime' => $seconds,
+				'cookie_lifetime' => $seconds,
 			));
 		}
 	}
@@ -514,14 +545,14 @@ class Session extends /*Nette\*/Object
 	 * @param  string  path
 	 * @param  string  domain
 	 * @param  bool    secure
-	 * @return void
+	 * @return Session  provides a fluent interface
 	 */
 	public function setCookieParams($path, $domain = NULL, $secure = NULL)
 	{
-		$this->configure(array(
-			'session.cookie_path' => $path,
-			'session.cookie_domain' => $domain,
-			'session.cookie_secure' => $secure
+		return $this->setOptions(array(
+			'cookie_path' => $path,
+			'cookie_domain' => $domain,
+			'cookie_secure' => $secure
 		));
 	}
 
@@ -540,12 +571,12 @@ class Session extends /*Nette\*/Object
 
 	/**
 	 * Sets path of the directory used to save session data.
-	 * @return void
+	 * @return Session  provides a fluent interface
 	 */
 	public function setSavePath($path)
 	{
-		$this->configure(array(
-			'session.save_path' => $path,
+		return $this->setOptions(array(
+			'save_path' => $path,
 		));
 	}
 
@@ -569,21 +600,21 @@ class Session extends /*Nette\*/Object
 
 
 	/**
-	 * @return Nette\Web\IHttpRequest
+	 * @return IHttpRequest
 	 */
 	protected function getHttpRequest()
 	{
-		return /*Nette\*/Environment::getHttpRequest();
+		return Environment::getHttpRequest();
 	}
 
 
 
 	/**
-	 * @return Nette\Web\IHttpResponse
+	 * @return IHttpResponse
 	 */
 	protected function getHttpResponse()
 	{
-		return /*Nette\*/Environment::getHttpResponse();
+		return Environment::getHttpResponse();
 	}
 
 }

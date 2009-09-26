@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Mail
- * @version    $Id: IMailer.php 355 2009-06-16 17:31:51Z david@grudl.com $
  */
 
-/*namespace Nette\Mail;*/
+
 
 
 

@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette
- * @version    $Id: ImageMagick.php 355 2009-06-16 17:31:51Z david@grudl.com $
  */
 
-/*namespace Nette;*/
+
 
 
 
@@ -70,7 +69,7 @@ class ImageMagick extends Image
 	public function __construct($file, & $format = NULL)
 	{
 		if (!is_file($file)) {
-			throw new /*\*/InvalidArgumentException('File not found.');
+			throw new InvalidArgumentException('File not found.');
 		}
 		$format = $this->setFile(realpath($file));
 		if ($format === 'JPEG') $format = self::JPEG;
@@ -162,7 +161,7 @@ class ImageMagick extends Image
 		$top = max(0, (int) $top);
 		$width = min((int) $width, $this->getWidth() - $left);
 		$height = min((int) $height, $this->getHeight() - $top);
-		$this->execute("convert -crop \"{$width}x{$height}+{$left}+{$top}\" -strip %input %output", self::PNG);
+		$this->execute("convert -crop {$width}x{$height}+{$left}+{$top} -strip %input %output", self::PNG);
 		return $this;
 	}
 
@@ -202,9 +201,9 @@ class ImageMagick extends Image
 	private function setFile($file)
 	{
 		$this->file = $file;
-		$res = $this->execute('identify -format "%w,%h,%m" ' . addcslashes($this->file, ' '));
+		$res = $this->execute('identify -format "%w,%h,%m" ' . escapeshellarg($this->file));
 		if (!$res) {
-			throw new /*\*/Exception("Unknown image type in file '$file' or ImageMagick not available.");
+			throw new Exception("Unknown image type in file '$file' or ImageMagick not available.");
 		}
 		list($this->width, $this->height, $format) = explode(',', $res, 3);
 		return $format;
@@ -220,12 +219,12 @@ class ImageMagick extends Image
 	 */
 	private function execute($command, $output = NULL)
 	{
-		$command = str_replace('%input', addcslashes($this->file, ' '), $command);
+		$command = str_replace('%input', escapeshellarg($this->file), $command);
 		if ($output) {
 			$newFile = is_string($output)
 				? $output
 				: (self::$tempDir ? self::$tempDir : dirname($this->file)) . '/_tempimage' . uniqid() . image_type_to_extension($output);
-			$command = str_replace('%output', addcslashes($newFile, ' '), $command);
+			$command = str_replace('%output', escapeshellarg($newFile), $command);
 		}
 
 		$lines = array();
@@ -233,7 +232,7 @@ class ImageMagick extends Image
 
 		if ($output) {
 			if ($status != 0) {
-				throw new /*\*/Exception("Unknown error while calling ImageMagick.");
+				throw new Exception("Unknown error while calling ImageMagick.");
 			}
 			if ($this->isTemporary) {
 				unlink($this->file);

@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Mail
- * @version    $Id: Mail.php 471 2009-08-03 19:21:00Z david@grudl.com $
  */
 
-/*namespace Nette\Mail;*/
+
 
 
 
@@ -330,7 +329,7 @@ class Mail extends MailMimePart
 	private function readFile($file, & $contentType)
 	{
 		if (!is_file($file)) {
-			throw new /*\*/FileNotFoundException("File '$file' not found.");
+			throw new FileNotFoundException("File '$file' not found.");
 		}
 		if (!$contentType && $info = getimagesize($file)) {
 			$contentType = $info['mime'];
@@ -375,7 +374,7 @@ class Mail extends MailMimePart
 	public function getMailer()
 	{
 		if ($this->mailer === NULL) {
-			/**/fixNamespace(self::$defaultMailer);/**/
+			fixNamespace(self::$defaultMailer);
 			$this->mailer = is_object(self::$defaultMailer) ? self::$defaultMailer : new self::$defaultMailer;
 		}
 		return $this->mailer;
@@ -438,9 +437,9 @@ class Mail extends MailMimePart
 	 */
 	protected function buildHtml()
 	{
-		if ($this->html instanceof /*Nette\Templates\*/ITemplate) {
+		if ($this->html instanceof ITemplate) {
 			$this->html->mail = $this;
-			if ($this->basePath === NULL && $this->html instanceof /*Nette\Templates\*/IFileTemplate) {
+			if ($this->basePath === NULL && $this->html instanceof IFileTemplate) {
 				$this->basePath = dirname($this->html->getFile());
 			}
 			$this->html = $this->html->__toString(TRUE);
@@ -470,13 +469,13 @@ class Mail extends MailMimePart
 	protected function buildText()
 	{
 		$text = $this->getBody();
-		if ($text instanceof /*Nette\Templates\*/ITemplate) {
+		if ($text instanceof ITemplate) {
 			$text->mail = $this;
 			$this->setBody($text->__toString(TRUE));
 
 		} elseif ($text == NULL && $this->html != NULL) { // intentionally ==
 			$text = preg_replace('#<(style|script|head).*</\\1>#Uis', '', $this->html);
-			$text = preg_replace('#\s+#', ' ', $text);
+			$text = preg_replace('#[ \t\r\n]+#', ' ', $text);
 			$text = preg_replace('#<(/?p|/?h\d|li|br|/tr)[ >]#i', "\n$0", $text);
 			$text = html_entity_decode(strip_tags($text), ENT_QUOTES, $this->charset);
 			$this->setBody(trim($text));

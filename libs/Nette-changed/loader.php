@@ -15,13 +15,12 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette
- * @version    $Id: loader.php 251 2009-03-31 17:10:17Z david@grudl.com $
  */
 
-/**/require_once dirname(__FILE__) . '/compatibility.php';/**/
+require_once dirname(__FILE__) . '/compatibility.php';
 
 require_once dirname(__FILE__) . '/Loaders/NetteLoader.php';
 
 
-/*Nette\Loaders\*/NetteLoader::getInstance()->base = dirname(__FILE__);
-/*Nette\Loaders\*/NetteLoader::getInstance()->register();
+NetteLoader::getInstance()->base = dirname(__FILE__);
+NetteLoader::getInstance()->register();

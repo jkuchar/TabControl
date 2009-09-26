@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Application
- * @version    $Id: AppForm.php 473 2009-08-04 00:40:22Z david@grudl.com $
  */
 
-/*namespace Nette\Application;*/
+
 
 
 
@@ -37,25 +36,19 @@ require_once dirname(__FILE__) . '/../Application/ISignalReceiver.php';
  *
  * @property-read Presenter $presenter
  */
-class AppForm extends /*Nette\Forms\*/Form implements ISignalReceiver
+class AppForm extends Form implements ISignalReceiver
 {
 
 	/**
 	 * Application form constructor.
 	 */
-	public function __construct(/*Nette\*/IComponentContainer $parent = NULL, $name = NULL)
+	public function __construct(IComponentContainer $parent = NULL, $name = NULL)
 	{
+		parent::__construct();
 		$this->monitor('Nette\Application\Presenter');
-		parent::__construct($name, $parent);
-	}
-
-
-
-	/**
-	 * @return void
-	 */
-	public function addTracker($name)
-	{
+		if ($parent !== NULL) {
+			$parent->addComponent($this, $name);
+		}
 	}
 
 
@@ -86,32 +79,51 @@ class AppForm extends /*Nette\Forms\*/Form implements ISignalReceiver
 				$this->lookupPath('Nette\Application\Presenter') . self::NAME_SEPARATOR . 'submit!',
 				array()
 			));
+
+			// fill-in the form with HTTP data
+			if ($this->isSubmitted()) {
+				foreach ($this->getControls() as $control) {
+					$control->loadHttpData();
+				}
+			}
 		}
+		parent::attached($presenter);
 	}
 
 
 
 	/**
-	 * Detects form submission and loads PresenterRequest values.
-	 * @return void
+	 * Tells if the form is anchored.
+	 * @return bool
 	 */
-	public function processHttpRequest($foo = NULL)
+	public function isAnchored()
+	{
+		return (bool) $this->getPresenter(FALSE);
+	}
+
+
+
+	/**
+	 * Internal: receives submitted HTTP data.
+	 * @return array
+	 */
+	protected function receiveHttpData()
 	{
 		$presenter = $this->getPresenter();
+		if (!$presenter->isSignalReceiver($this, 'submit')) {
+			return;
+		}
 
-		$this->submittedBy = FALSE;
-		if (!$presenter->isSignalReceiver($this, 'submit')) return;
-
-		$isPost = strcasecmp($this->getMethod(), 'post') === 0;
+		$isPost = $this->getMethod() === self::POST;
 		$request = $presenter->getRequest();
-		if ($request->isMethod('forward') || $request->isMethod('post') !== $isPost) return;
+		if ($request->isMethod('forward') || $request->isMethod('post') !== $isPost) {
+			return;
+		}
 
-		$this->submittedBy = TRUE;
 		if ($isPost) {
-			$this->loadHttpData(/*Nette\*/Tools::arrayMergeTree($request->getPost(), $request->getFiles()));
-
+			return ArrayTools::mergeTree($request->getPost(), $request->getFiles());
 		} else {
-			$this->loadHttpData($request->getParams());
+			return $request->getParams();
 		}
 	}
 
@@ -129,7 +141,7 @@ class AppForm extends /*Nette\Forms\*/Form implements ISignalReceiver
 	public function signalReceived($signal)
 	{
 		if ($signal === 'submit') {
-			$this->submit();
+			$this->fireEvents();
 
 		} else {
 			throw new BadSignalException("There is no handler for signal '$signal' in '{$this->getClass()}'.");

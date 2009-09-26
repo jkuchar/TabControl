@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette
- * @version    $Id: Environment.php 451 2009-07-21 23:56:06Z david@grudl.com $
  */
 
-/*namespace Nette;*/
+
 
 
 
@@ -49,7 +48,7 @@ final class Environment
 	/** @var string  the mode of current application */
 	private static $mode = array();
 
-	/** @var \ArrayObject */
+	/** @var ArrayObject */
 	private static $config;
 
 	/** @var IServiceLocator */
@@ -59,13 +58,17 @@ final class Environment
 	private static $vars = array(
 		'encoding' => array('UTF-8', FALSE),
 		'lang' => array('en', FALSE),
-		'cacheBase' => array('%tempDir%/cache', TRUE),
+		'cacheBase' => array('%tempDir%', TRUE), // deprecated
 		'tempDir' => array('%appDir%/temp', TRUE),
 		'logDir' => array('%appDir%/log', TRUE),
-		'templatesDir' => array('%appDir%/templates', TRUE),
-		'presentersDir' => array('%appDir%/presenters', TRUE),
-		'componentsDir' => array('%appDir%/components', TRUE),
-		'modelsDir' => array('%appDir%/models', TRUE),
+	);
+
+	/** @var array */
+	private static $aliases = array(
+		'getHttpRequest' => 'Nette\Web\IHttpRequest',
+		'getHttpResponse' => 'Nette\Web\IHttpResponse',
+		'getApplication' => 'Nette\Application\Application',
+		'getUser' => 'Nette\Web\IUser',
 	);
 
 
@@ -75,7 +78,7 @@ final class Environment
 	 */
 	final public function __construct()
 	{
-		throw new /*\*/LogicException("Cannot instantiate static class " . get_class($this));
+		throw new LogicException("Cannot instantiate static class " . get_class($this));
 	}
 
 
@@ -114,7 +117,7 @@ final class Environment
 	 * Sets the current environment name.
 	 * @param  string
 	 * @return void
-	 * @throws \InvalidStateException
+	 * @throws InvalidStateException
 	 */
 	public static function setName($name)
 	{
@@ -122,7 +125,7 @@ final class Environment
 			self::setVariable('environment', $name, FALSE);
 
 		} else {
-			throw new /*\*/InvalidStateException('Environment name has been already set.');
+			throw new InvalidStateException('Environment name has been already set.');
 		}
 	}
 
@@ -199,12 +202,11 @@ final class Environment
 
 
 	/**
-	 * Determines whether the debugger is active.
-	 * @return bool
+	 * @deprecated
 	 */
 	public static function isDebugging()
 	{
-		return self::getMode('debug');
+		throw new DeprecatedException;
 	}
 
 
@@ -235,7 +237,7 @@ final class Environment
 	 * @param  string
 	 * @param  mixed  default value to use if key not found
 	 * @return mixed
-	 * @throws \InvalidStateException
+	 * @throws InvalidStateException
 	 */
 	public static function getVariable($name, $default = NULL)
 	{
@@ -282,7 +284,7 @@ final class Environment
 	 * Returns expanded variable.
 	 * @param  string
 	 * @return string
-	 * @throws \InvalidStateException
+	 * @throws InvalidStateException
 	 */
 	public static function expand($var)
 	{
@@ -306,7 +308,7 @@ final class Environment
 
 		static $livelock;
 		if (isset($livelock[$var])) {
-			throw new /*\*/InvalidStateException("Circular reference detected for variables: "
+			throw new InvalidStateException("Circular reference detected for variables: "
 				. implode(', ', array_keys($livelock)) . ".");
 		}
 
@@ -314,16 +316,16 @@ final class Environment
 			$livelock[$var] = TRUE;
 			$val = self::getVariable($var);
 			unset($livelock[$var]);
-		} catch (/*\*/Exception $e) {
+		} catch (Exception $e) {
 			$livelock = array();
 			throw $e;
 		}
 
 		if ($val === NULL) {
-			throw new /*\*/InvalidStateException("Unknown environment variable '$var'.");
+			throw new InvalidStateException("Unknown environment variable '$var'.");
 
 		} elseif (!is_scalar($val)) {
-			throw new /*\*/InvalidStateException("Environment variable '$var' is not scalar.");
+			throw new InvalidStateException("Environment variable '$var' is not scalar.");
 		}
 
 		return $val;
@@ -352,12 +354,42 @@ final class Environment
 	/**
 	 * Gets the service object of the specified type.
 	 * @param  string service name
-	 * @param  bool   throw exception if service doesn't exist?
-	 * @return mixed
+	 * @param  array  options in case service is not singleton
+	 * @return object
 	 */
-	public static function getService($name, $need = TRUE)
+	public static function getService($name, array $options = NULL)
 	{
-		return self::getServiceLocator()->getService($name, $need);
+		return self::getServiceLocator()->getService($name, $options);
+	}
+
+
+
+	/**
+	 * Adds new Environment::get<Service>() method.
+	 * @param  string  service name
+	 * @param  string  alias name
+	 * @return void
+	 */
+	public static function setServiceAlias($service, $alias)
+	{
+		self::$aliases['get' . ucfirst($alias)] = $service;
+	}
+
+
+
+	/**
+	 * Calling to undefined static method.
+	 * @param  string  method name
+	 * @param  array   arguments
+	 * @return object  service
+	 */
+	public static function __callStatic($name, $args)
+	{
+		if (isset(self::$aliases[$name])) {
+			return self::getServiceLocator()->getService(self::$aliases[$name], $args);
+		} else {
+			throw new MemberAccessException("Call to undefined static method Nette\\Environment::$name().");
+		}
 	}
 
 
@@ -367,7 +399,7 @@ final class Environment
 	 */
 	public static function getHttpRequest()
 	{
-		return self::getServiceLocator()->getService('Nette\Web\IHttpRequest');
+		return self::getServiceLocator()->getService(self::$aliases[__FUNCTION__]);
 	}
 
 
@@ -377,27 +409,27 @@ final class Environment
 	 */
 	public static function getHttpResponse()
 	{
-		return self::getServiceLocator()->getService('Nette\Web\IHttpResponse');
+		return self::getServiceLocator()->getService(self::$aliases[__FUNCTION__]);
 	}
 
 
 
 	/**
-	 * @return Nette\Application\Application
+	 * @return Application
 	 */
 	public static function getApplication()
 	{
-		return self::getServiceLocator()->getService('Nette\Application\Application');
+		return self::getServiceLocator()->getService(self::$aliases[__FUNCTION__]);
 	}
 
 
 
 	/**
-	 * @return Nette\Web\IUser
+	 * @return User
 	 */
 	public static function getUser()
 	{
-		return self::getServiceLocator()->getService('Nette\Web\IUser');
+		return self::getServiceLocator()->getService(self::$aliases[__FUNCTION__]);
 	}
 
 
@@ -408,11 +440,11 @@ final class Environment
 
 	/**
 	 * @param  string
-	 * @return Nette\Caching\Cache
+	 * @return Cache
 	 */
 	public static function getCache($namespace = '')
 	{
-		return new /*Nette\Caching\*/Cache(
+		return new Cache(
 			self::getService('Nette\Caching\ICacheStorage'),
 			$namespace
 		);
@@ -423,7 +455,7 @@ final class Environment
 	/**
 	 * Returns instance of session or session namespace.
 	 * @param  string
-	 * @return Nette\Web\Session|Nette\Web\Session
+	 * @return Session
 	 */
 	public static function getSession($namespace = NULL)
 	{
@@ -440,7 +472,7 @@ final class Environment
 	/**
 	 * Loads global configuration from file and process it.
 	 * @param  string|Nette\Config\Config  file name or Config object
-	 * @return \ArrayObject
+	 * @return ArrayObject
 	 */
 	public static function loadConfig($file = NULL)
 	{

@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Collections
- * @version    $Id: IList.php 182 2008-12-31 00:28:33Z david@grudl.com $
  */
 
-/*namespace Nette\Collections;*/
+
 
 
 
@@ -34,7 +33,7 @@ require_once dirname(__FILE__) . '/../Collections/ICollection.php';
  * @copyright  Copyright (c) 2004, 2009 David Grudl
  * @package    Nette\Collections
  */
-interface IList extends ICollection, /*\*/ArrayAccess
+interface IList extends ICollection, ArrayAccess
 {
 	function indexOf($item);
 	function insertAt($index, $item);

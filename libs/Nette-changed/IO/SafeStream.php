@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\IO
- * @version    $Id: SafeStream.php 249 2009-03-30 09:12:01Z jakub.vrana $
  */
 
-/*namespace Nette\IO;*/
+
 
 
 

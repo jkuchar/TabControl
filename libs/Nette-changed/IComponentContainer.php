@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette
- * @version    $Id: IComponentContainer.php 182 2008-12-31 00:28:33Z david@grudl.com $
  */
 
-/*namespace Nette;*/
+
 
 
 
@@ -62,7 +61,7 @@ interface IComponentContainer extends IComponent
 	 * Iterates over a components.
 	 * @param  bool    recursive?
 	 * @param  string  class types filter
-	 * @return \ArrayIterator
+	 * @return ArrayIterator
 	 */
 	function getComponents($deep = FALSE, $filterType = NULL);
 

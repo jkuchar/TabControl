@@ -15,7 +15,6 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette
- * @version    $Id: compatibility.php 254 2009-04-01 06:08:57Z david@grudl.com $
  */
 
 
@@ -31,7 +30,7 @@ if (version_compare(PHP_VERSION, '5.2.0', '<')) {
 
 
 
-/**/
+
 /**
  * Fix for class::method callback in PHP < 5.2.2
  */
@@ -81,4 +80,3 @@ function fixNamespace(& $class)
 		$class = substr($class, $a + 1);
 	}
 }
-/**/

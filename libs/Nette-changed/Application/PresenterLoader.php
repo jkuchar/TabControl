@@ -15,10 +15,9 @@
  * @link       http://nettephp.com
  * @category   Nette
  * @package    Nette\Application
- * @version    $Id: PresenterLoader.php 246 2009-03-30 04:00:21Z david@grudl.com $
  */
 
-/*namespace Nette\Application;*/
+
 
 
 
@@ -65,7 +64,7 @@ class PresenterLoader implements IPresenterLoader
 			// internal autoloading
 			$file = $this->formatPresenterFile($name);
 			if (is_file($file) && is_readable($file)) {
-				/*Nette\Loaders\*/LimitedScope::load($file);
+				LimitedScope::load($file);
 			}
 
 			if (!class_exists($class)) {
@@ -73,10 +72,10 @@ class PresenterLoader implements IPresenterLoader
 			}
 		}
 
-		$reflection = new /*\*/ReflectionClass($class);
+		$reflection = new ReflectionClass($class);
 		$class = $reflection->getName();
 
-		if (!$reflection->implementsInterface(/*Nette\Application\*/'IPresenter')) {
+		if (!$reflection->implementsInterface('IPresenter')) {
 			throw new InvalidPresenterException("Cannot load presenter '$name', class '$class' is not Nette\\Application\\IPresenter implementor.");
 		}
 
@@ -110,7 +109,7 @@ class PresenterLoader implements IPresenterLoader
 	public function formatPresenterClass($presenter)
 	{
 		// PHP 5.3
-		/*return strtr($presenter, ':', '\\') . 'Presenter';*/
+		
 		return strtr($presenter, ':', '_') . 'Presenter';
 	}
 
@@ -124,7 +123,7 @@ class PresenterLoader implements IPresenterLoader
 	public function unformatPresenterClass($class)
 	{
 		// PHP 5.3
-		/*return strtr(substr($class, 0, -9), '\\', ':');*/
+		
 		return strtr(substr($class, 0, -9), '_', ':');
 	}
 
@@ -137,9 +136,8 @@ class PresenterLoader implements IPresenterLoader
 	 */
 	public function formatPresenterFile($presenter)
 	{
-		$presenter = str_replace(':', 'Module/', $presenter);
-		$presenter = /*Nette\*/Environment::getVariable('presentersDir') . '/' . $presenter . 'Presenter.php';
-		return $presenter;
+		$path = '/' . str_replace(':', 'Module/', $presenter);
+		return Environment::getVariable('appDir') . substr_replace($path, '/presenters', strrpos($path, '/'), 0) . 'Presenter.php';
 	}
 
 }
