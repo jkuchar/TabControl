@@ -2,10 +2,9 @@
 
 // Tento modul vyžaduje úpravu Nette: http://forum.nettephp.com/cs/2233-snippet-a-jeho-druhy-parametr
 
-class DefaultPresenter extends BasePresenter
-{
+class DefaultPresenter extends BasePresenter {
 
-    // Dokud se neopraví: http://forum.nettephp.com/cs/2301-dalsi-nekonecny-cyklus-canonicalize
+// Dokud se neopraví: http://forum.nettephp.com/cs/2301-dalsi-nekonecny-cyklus-canonicalize
     public $autoCanonicalize = FALSE;
 
     /**
@@ -15,17 +14,20 @@ class DefaultPresenter extends BasePresenter
      */
     public $id=null;
 
+
+
     /**
      * Returns array of classes persistent parameters. They have public visibility and are non-static.
      * This default implementation detects persistent parameters by annotation @persistent.
      * @return array
      */
-    public static function getPersistentParams()
-    {
+    public static function getPersistentParams() {
         return array("id");
     }
 
-    function createComponentTabs($name){
+
+
+    function createComponentTabs($name) {
         $tc = new TabControl($this,$name);
         $tc->mode = TabControl::MODE_LAZY;
         $tc->sortable = true;
@@ -33,27 +35,31 @@ class DefaultPresenter extends BasePresenter
         //$tc->handlerComponent = $this; // Is automatic
 
         $t = $tc->addTab("datagrid");
-            $t->header = "<i>Data</i>Grid";
-            $t->contentFactory = array($this,"createTabDataGrid");
-            $t->hasSnippets = true; // Potřeba nastavit u každého tabu, ve kterém budou snippety! Jinak nebude fungovat AJAX! Mástejnou funkci jako @ v šablonách
+        $t->header = "<i>Data</i>Grid";
+        $t->contentFactory = array($this,"createTabDataGrid");
+        $t->hasSnippets = true; // Potřeba nastavit u každého tabu, ve kterém budou snippety! Jinak nebude fungovat AJAX! Má stejnou funkci jako @ v šablonách
 
         $t = $tc->addTab("novy");
-            $t->header = "Nový";
-            $t->contentFactory = array($this,"createTabNovy");
+        $t->header = "Nový";
+        $t->contentFactory = array($this,"createTabNovy");
 
         $t = $tc->addTab("edit");
-            $t->header = "Editovat";
-            $t->contentFactory = array($this,"createTabEdit");
-            $t->contentRenderer = array($this,"renderTabEdit");
+        $t->header = "Editovat";
+        $t->contentFactory = array($this,"createTabEdit");
+        $t->contentRenderer = array($this,"renderTabEdit");
 
         $t = $tc->addTab("customRenderer");
-            $t->header = "Vlastní vykreslení tabu";
-            $t->content = "Ahoj, jak se máš Jirko!";
-            $t->contentRenderer = array($this,"renderTabCustomRenderer");
+        $t->header = "Vlastní vykreslení tabu";
+        $t->content = "Ahoj, jak se máš Jirko!";
+        $t->contentRenderer = array($this,"renderTabCustomRenderer");
 
         $t = $tc->addTab("help");
-            $t->header = "Nápověda";
-            $t->contentFactory = array($this,"createTabHelp");
+        $t->header = "Nápověda";
+        $t->contentFactory = array($this,"createTabHelp");
+
+        $t = $tc->addTab("template");
+        $t->header = "Ze šablony";
+        $t->contentFactory = array($this,"createTabTemplate");
 
         return $tc;
     }
@@ -68,7 +74,7 @@ class DefaultPresenter extends BasePresenter
      * @param Tab $tab
      * @return AppForm
      */
-    function createForm($name,Tab $tab){
+    function createForm($name,Tab $tab) {
         $form = new AppForm($tab,$name);
         $form->getElementPrototype()->addClass("ajax"); // Zajaxovatění formulářů v jquery.nette.js
         $form->addText("Neco", "Něco")->addRule(Form::FILLED, "Něco je povinné!");
@@ -78,13 +84,17 @@ class DefaultPresenter extends BasePresenter
         return $form;
     }
 
-    function createTabNovy($name,Tab $tab){
+
+
+    function createTabNovy($name,Tab $tab) {
         $form = $this->createForm($name, $tab);
         $form["odeslat"]->caption = "Přidat";
         return $form;
     }
 
-    function createTabEdit($name,Tab $tab){
+
+
+    function createTabEdit($name,Tab $tab) {
         $form = $this->createForm($name, $tab);
         $form["odeslat"]->caption = "Uložit změny";
 
@@ -94,7 +104,9 @@ class DefaultPresenter extends BasePresenter
         return $form;
     }
 
-    function renderTabEdit(Tab $tab){
+
+
+    function renderTabEdit(Tab $tab) {
         $form = $tab->content;
         if($form["Id"]->value != "")
             $form->render();
@@ -102,7 +114,9 @@ class DefaultPresenter extends BasePresenter
             echo "Nejprve vyberte položku v DataGridu kliknutím na ikonku editace.";
     }
 
-    function ulozFormular(AppForm $form){
+
+
+    function ulozFormular(AppForm $form) {
         $values = $form->values;
         $this->flashMessage("Data přijatá z formuláře:<br>".Debug::dump($values, TRUE), "info");
 
@@ -121,8 +135,7 @@ class DefaultPresenter extends BasePresenter
 
 
 
-
-    function createTabDataGrid($name,Tab $tab){
+    function createTabDataGrid($name,Tab $tab) {
         $model = new DatagridModel('customers');
         $grid = new DataGrid;
 
@@ -215,7 +228,9 @@ class DefaultPresenter extends BasePresenter
         return $grid;
     }
 
-    function handleEdit($customerNumber){
+
+
+    function handleEdit($customerNumber) {
         $this->flashMessage("Přepínám vás do editačního formuláře.", "info");
         /* $this["tabs"] - class TabControl (objekt skupiny Tabů)
          * $this["tabs"]["form2"] - class Tab (objekt jednoho tabu)
@@ -225,35 +240,51 @@ class DefaultPresenter extends BasePresenter
         $this["tabs"]->select("edit"); // Nikam nepřesměrovává, pouze přepne tab. (s JS i bez něj)
     }
 
-    function handleDemo(){
+
+
+    function handleDemo() {
         $this->flashMessage("Toto je pouze DEMO aplikace!", "info");
     }
 
 
 
     /* ### Tab CustomRenderer ### */
-    function renderTabCustomRenderer(Tab $tab){
+    function renderTabCustomRenderer(Tab $tab) {
         $content = $tab->content;
         echo str_replace("Jirko","Franto",$content);
         echo "<hr><i>Tento tab byl vykreslen vlastním rendererem.</i>";
     }
 
+
+
     /* ### Tab Help ### */
-   function createTabHelp($name,Tab $tab){
-       return "V tomto příkladu můžete vyzkoušet, jak TabControl funguje. Můžete se v tabech přepínat, jak AJAXově nebo úplně bez podpory JavaScriptu. Pokud máte zapnutý JavaScript, můžete tabům i změnit pořadí přetažením. (pořadí se uloží do session - toto chování můžete jednoduše změnit pomocí callbacku) K chodu této knihovny je potřeba nejnovější Nette Framework, jQuery, jQuery UI Core, jQuery UI Tabs, jQuery UI Sortable (pro podporu přesouvání).";
-   }
+    function createTabHelp($name,Tab $tab) {
+        return "V tomto příkladu můžete vyzkoušet, jak TabControl funguje. Můžete se v tabech přepínat, jak AJAXově nebo úplně bez podpory JavaScriptu. Pokud máte zapnutý JavaScript, můžete tabům i změnit pořadí přetažením. (pořadí se uloží do session - toto chování můžete jednoduše změnit pomocí callbacku) K chodu této knihovny je potřeba nejnovější Nette Framework, jQuery, jQuery UI Core, jQuery UI Tabs, jQuery UI Sortable (pro podporu přesouvání).";
+    }
+
+
+
+    function createTabTemplate($name, Tab $tab) {
+        $templatePersons = new Template;
+        $templatePersons->setFile(Environment::expand("%templatesDir%/default/tabs/sablona.phtml"));
+        return $templatePersons;
+    }
 
 
 
     /* ### Handlery k odkazů v sekci Externí ovládání TabControlu ### */
 
-    function handlePrepniNa($tab){
+    function handlePrepniNa($tab) {
         $this["tabs"]->select($tab);
         if(!$this->isAjax())
             $this->redirect("this");
     }
 
-    function handlePrekresli($tab){
+
+
+    function handlePrekresli($tab) {
         $this["tabs"]->redraw($tab);
     }
+
+    
 }

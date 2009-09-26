@@ -16,21 +16,22 @@
 /**
  * Tab class
  *
- * show off @property, @property-read, @property-write
+  * show off @property, @property-read, @property-write
  * @property mixed $content Content of the tab
  */
-class Tab extends Control
-{
+class Tab extends Control {
 
     /**************************************************************************/
     /*                               Variables                                */
     /**************************************************************************/
 
-    /**
-     * Header of the tab
-     * @var string
-     */
+/**
+ * Header of the tab
+ * @var string
+ */
     public $header;
+
+
 
     /**
      * Tab content factory
@@ -38,17 +39,23 @@ class Tab extends Control
      */
     public $contentFactory;
 
+
+
     /**
      * Tab content renderer
      * @var array
      */
     public $contentRenderer;
 
+
+
     /**
      * Created component
      * @var IComponent
      */
     private $content;
+
+
 
     /**
      * Has content some snippets?
@@ -57,12 +64,15 @@ class Tab extends Control
      */
     public $hasSnippets=false;
 
-    function  __construct(TabControl $parent,$name)
-    {
+
+
+    function  __construct(TabControl $parent,$name) {
         parent::__construct($parent, $name);
         $this->header = $name;
         $this->contentRenderer = array($this,"__render"); // Default renderer
     }
+
+
 
     /**************************************************************************/
     /*                            Main methods                                */
@@ -72,25 +82,26 @@ class Tab extends Control
      * Factory for components
      * @param string $name
      */
-    function createComponent($name)
-    {
+    function createComponent($name) {
         $this->getContent(); // This will also create content Components
     }
+
+
 
     /**
      * Creates (if need) content and returns
      * @return IComponent
      */
-    function getContent(){
-        if($this->content === null){
+    function getContent() {
+        if($this->content === null) {
             if(is_callable($this->contentFactory, FALSE)) {
-                // Callback
+            // Callback
                 $component = call_user_func_array($this->contentFactory, array($this->name,$this));
 
-                if($component instanceof IComponent){
+                if($component instanceof IComponent) {
                     $name = $this->name;
                     if($component->name !== null) $name = $component->name;
-                    
+
                     if($component->parent === null)
                         $this->addComponent($component, $name);
                     if($component->parent !== $this)
@@ -103,9 +114,13 @@ class Tab extends Control
         return $this->content;
     }
 
-    function setContent($content){
+
+
+    function setContent($content) {
         $this->content = $content;
     }
+
+
 
     /**
      * Renders component
@@ -118,17 +133,21 @@ class Tab extends Control
         }
     }
 
+
+
     /**
      * Default renderer
      * @param Tab $tab
      */
-    function __render(Tab $tab){
+    function __render(Tab $tab) {
         $content = $tab->getContent();
-        if($content instanceof IComponent){
-            $tab->getContent()->render();
+        if($content instanceof IComponent or $content instanceof ITemplate) {
+            $content->render();
         }else
             echo (string)$content;
     }
+
+
 
     /**
      * Generates URL to presenter, action or signal.
@@ -139,20 +158,35 @@ class Tab extends Control
      * @return string
      * @throws InvalidLinkException
      */
-    public function link($destination, $args = array())
-    {
-            if (!is_array($args)) {
-                    $args = func_get_args();
-                    array_shift($args);
-            }
-            return $this->parent->handlerComponent->link($destination, $args);
+    public function link($destination, $args = array()) {
+        if (!is_array($args)) {
+            $args = func_get_args();
+            array_shift($args);
+        }
+        return $this->parent->handlerComponent->link($destination, $args);
     }
 
-    function select(){
-        return $this->parent->select($this->name);
+
+
+    /**
+     * Selects tab
+     * @return Tab
+     */
+    function select() {
+        $this->parent->select($this->name);
+        return $this;
     }
 
-    function redraw(){
-        return $this->parent->redraw($this->name);
+
+
+    /**
+     * Redraws tab
+     * @return Tab
+     */
+    function redraw() {
+        $this->parent->redraw($this->name);
+        return $this;
     }
+
+
 }

@@ -8,7 +8,7 @@ abstract class BasePresenter extends /*Nette\Application\*/Presenter {
             $session->start();
         }
 
-        if($this->isAjax() and !eregi("FirePHP",Environment::getHttpRequest()->getHeader("User-agent", ""))){
+        if($this->isAjax() and !eregi("FirePHP",Environment::getHttpRequest()->getHeader("User-agent", ""))) {
             // Když není k dispozici firebug a je to ajaxový požadavek, tak začni logovat, jako kdyby byl požadavek na produkčním serveru, ať se alespoň něco dozvíme
             Debug::enable(Debug::PRODUCTION);
         }
@@ -19,8 +19,8 @@ abstract class BasePresenter extends /*Nette\Application\*/Presenter {
     protected function createTemplate() {
         $template = parent::createTemplate();
         $template->registerFilter('Nette\Templates\CurlyBracketsFilter::invoke');
-//        $template->registerFilter('Nette\Templates\TemplateFilters::netteLinks');
-//        $template->registerFilter('Nette\Templates\TemplateFilters::relativeLinks');
+        //$template->registerFilter('Nette\Templates\TemplateFilters::netteLinks');
+        //$template->registerFilter('Nette\Templates\TemplateFilters::relativeLinks');
         return $template;
     }
 
@@ -30,7 +30,7 @@ abstract class BasePresenter extends /*Nette\Application\*/Presenter {
      * @param  string
      * @return stdClass
      */
-    public function flashMessage($message, $type = 'info'){
+    public function flashMessage($message, $type = 'info') {
         $this->invalidateControl("flashes");
         parent::flashMessage($message, $type);
     }
