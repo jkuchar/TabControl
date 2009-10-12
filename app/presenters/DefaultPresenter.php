@@ -60,20 +60,29 @@ class DefaultPresenter extends BasePresenter {
         $t = $tc->addTab("template");
         $t->header = "Ze šablony";
         $t->contentFactory = array($this,"createTabTemplate");
+	/*$t->hasSnippets = true;*/
+
+        $t = $tc->addTab("templateWithComponent");
+        $t->header = "Ze šablony s komponentou";
+        $t->contentFactory = array($this,"createTabTemplateWithComponent");
+	$t->hasSnippets = true; // Pokud komponenta umí ajax
+
+	$t = $tc->addTab("InnerTabControl");
+	$t->header = "TabControl";
+	$t->contentFactory = array($this,"createTabInnerTabControl");
+	$t->hasSnippets = true;
 
         return $tc;
     }
 
 
 
+
+
+
+
     /* Tab factories */
 
-    /**
-     * Creates form
-     * @param string $name
-     * @param Tab $tab
-     * @return AppForm
-     */
     function createForm($name,Tab $tab) {
         $form = new AppForm($tab,$name);
         $form->getElementPrototype()->addClass("ajax"); // Zajaxovatění formulářů v jquery.nette.js
@@ -84,15 +93,11 @@ class DefaultPresenter extends BasePresenter {
         return $form;
     }
 
-
-
     function createTabNovy($name,Tab $tab) {
         $form = $this->createForm($name, $tab);
         $form["odeslat"]->caption = "Přidat";
         return $form;
     }
-
-
 
     function createTabEdit($name,Tab $tab) {
         $form = $this->createForm($name, $tab);
@@ -104,8 +109,6 @@ class DefaultPresenter extends BasePresenter {
         return $form;
     }
 
-
-
     function renderTabEdit(Tab $tab) {
         $form = $tab->content;
         if($form["Id"]->value != "")
@@ -113,8 +116,6 @@ class DefaultPresenter extends BasePresenter {
         else
             echo "Nejprve vyberte položku v DataGridu kliknutím na ikonku editace.";
     }
-
-
 
     function ulozFormular(AppForm $form) {
         $values = $form->values;
@@ -132,6 +133,8 @@ class DefaultPresenter extends BasePresenter {
         // Přepneme uživatele zpět na datagrid
         $tabControl->select("datagrid");
     }
+
+
 
 
 
@@ -228,23 +231,23 @@ class DefaultPresenter extends BasePresenter {
         return $grid;
     }
 
+	    /* Obslužné handlery k datagridu */
+
+	    function handleEdit($customerNumber) {
+		$this->flashMessage("Přepínám vás do editačního formuláře.", "info");
+		/* $this["tabs"] - class TabControl (objekt skupiny Tabů)
+		 * $this["tabs"]["form2"] - class Tab (objekt jednoho tabu)
+		 * $this["tabs"]["form2"]->content - class AppForm (obsah tabu)
+		 */
+		$this["tabs"]["edit"]->content["Id"]->value = $customerNumber;
+		$this["tabs"]->select("edit"); // Nikam nepřesměrovává, pouze přepne tab. (s JS i bez něj)
+	    }
+
+	    function handleDemo() {
+		$this->flashMessage("Toto je pouze DEMO aplikace!", "info");
+	    }
 
 
-    function handleEdit($customerNumber) {
-        $this->flashMessage("Přepínám vás do editačního formuláře.", "info");
-        /* $this["tabs"] - class TabControl (objekt skupiny Tabů)
-         * $this["tabs"]["form2"] - class Tab (objekt jednoho tabu)
-         * $this["tabs"]["form2"]->content - class AppForm (obsah tabu)
-         */
-        $this["tabs"]["edit"]->content["Id"]->value = $customerNumber;
-        $this["tabs"]->select("edit"); // Nikam nepřesměrovává, pouze přepne tab. (s JS i bez něj)
-    }
-
-
-
-    function handleDemo() {
-        $this->flashMessage("Toto je pouze DEMO aplikace!", "info");
-    }
 
 
 
@@ -257,6 +260,8 @@ class DefaultPresenter extends BasePresenter {
 
 
 
+
+
     /* ### Tab Help ### */
     function createTabHelp($name,Tab $tab) {
         return "V tomto příkladu můžete vyzkoušet, jak TabControl funguje. Můžete se v tabech přepínat, jak AJAXově nebo úplně bez podpory JavaScriptu. Pokud máte zapnutý JavaScript, můžete tabům i změnit pořadí přetažením. (pořadí se uloží do session - toto chování můžete jednoduše změnit pomocí callbacku) K chodu této knihovny je potřeba nejnovější Nette Framework, jQuery, jQuery UI Core, jQuery UI Tabs, jQuery UI Sortable (pro podporu přesouvání).";
@@ -264,11 +269,85 @@ class DefaultPresenter extends BasePresenter {
 
 
 
+
+
+    /* ### Tab Template ### */
+
     function createTabTemplate($name, Tab $tab) {
-        $templatePersons = new Template;
-        $templatePersons->setFile(Environment::expand("%appDir%/templates/default/tabs/sablona.phtml"));
+        $templatePersons = $this->createTemplate(); // Zde bych mohl volat i new Template; (nepotřebuji v template mít $control, $presenter a podobně)
+        $templatePersons->setFile(Environment::expand("%appDir%/templates/Default/Tabs/sablona.phtml"));
         return $templatePersons;
     }
+
+
+
+
+
+    /* ### Tab TabControl ### */
+
+    function createTabInnerTabControl($name, Tab $tab) {
+        $tc = new TabControl($tab,$name);
+        $tc->mode = TabControl::MODE_LAZY;
+        $tc->sortable = true;
+        //$tc->jQueryTabsOptions = "{ fx: { height: 'toggle',opacity:'toggle',marginTop:'toggle',marginBottom:'toggle',paddingTop:'toggle',paddingBottom:'toggle'} }";
+        //$tc->handlerComponent = $this; // Is automatic
+
+	$t = $tc->addTab("tab1");
+        $t->header = "Tab 1";
+        $t->contentFactory = array($this,"createInnerTab1");
+
+        $t = $tc->addTab("tab2");
+        $t->header = "tab 2";
+        $t->contentFactory = array($this,"createInnerTab2");
+
+        return $tc;
+    }
+
+	    function createInnerTab1($name,Tab $tab) {
+		$template = $this->createTemplate();
+		$template->setFile(Environment::expand("%appDir%/templates/Default/InnerTabs/Tab1.phtml"));
+		return $template;
+	    }
+
+	    function createInnerTab2($name,Tab $tab) {
+		$template = $this->createTemplate();
+		$template->setFile(Environment::expand("%appDir%/templates/Default/InnerTabs/Tab2.phtml"));
+		return $template;
+	    }
+
+
+
+
+
+    /* ### Tab Šablona s komponentou ### */
+
+    function createTabTemplateWithComponent($name, Tab $tab) {
+	// Vytvoří šablonu v presenteru, tzn. $control v šawbloně bude ukazovat na Presenter.
+	// Sice to funguje, ale myslím si, že to není úplně správně,
+	// proto prosím někoho nette-zkušenějšího, aby mi poradil, jak to udělat elegantněji
+        $template = $this->createTemplate();
+        $template->setFile(Environment::expand("%appDir%/templates/Default/Tabs/sablonaSKomponentou.phtml"));
+        return $template;
+    }
+    
+	    function createComponentAnotherTabControl($name) {
+		$tc = new TabControl($this,$name);
+		$tc->mode = TabControl::MODE_LAZY;
+		$tc->sortable = true;
+
+		// Obsah tabů si převezmene z příkladu tabu TabControl
+		$t = $tc->addTab("tab1");
+		$t->header = "Tab 1";
+		$t->contentFactory = array($this,"createInnerTab1");
+
+		$t = $tc->addTab("tab2");
+		$t->header = "tab 2";
+		$t->contentFactory = array($this,"createInnerTab2");
+
+		return $tc;
+	    }
+
+
 
 
 
@@ -285,6 +364,5 @@ class DefaultPresenter extends BasePresenter {
     function handlePrekresli($tab) {
         $this["tabs"]->redraw($tab);
     }
-
     
 }
