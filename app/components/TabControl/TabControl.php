@@ -482,7 +482,7 @@ class TabControl extends Control {
         $newOrder = array();
         foreach($order AS $tabWithTree) {
             $tabName = explode("__", $tabWithTree);
-            $newOrder[] = $tabName[2];
+            $newOrder[] = $tabName[count($tabName)-1];
         }
         $this->onOrderChange($newOrder,$this);
         if(!$this->saveTabsOrder[0]->tryCall($this->saveTabsOrder[1], array("order"=>$newOrder))) {
