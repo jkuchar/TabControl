@@ -488,7 +488,8 @@ class TabControl extends Control {
         if(!$this->saveTabsOrder[0]->tryCall($this->saveTabsOrder[1], array("order"=>$newOrder))) {
             throw new InvalidStateException("TabControl::saveTabsOrder is not callable!");
         }
-	$this->presenter->terminate();
+	Environment::getHttpResponse()->setContentType("application/json");
+	die("{}");
     }
 
 
