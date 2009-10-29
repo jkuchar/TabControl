@@ -12,7 +12,7 @@ For more information please see http://nettephp.com
 *}
 
 {snippet content}
-    <?
+    <?php
        $control->tabContainer->addClass("ui-tabs ui-widget ui-widget-content ui-corner-all");
        $control->tabContainer->id = $control->DOMtabsID;
     ?>
@@ -20,7 +20,7 @@ For more information please see http://nettephp.com
         {* Navigace v tabech *}
         <ul class="ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all" id="{$control->getSnippetId('div_ul')}">
             {foreach $control->tabs AS $name => $tab}
-                <?
+                <?php
                   $li = Html::el("li")->class("ui-tabs-panel ui-widget-content ui-state-default ui-corner-top");
                   $li->id = $control->getSnippetId("div_ul_li__".$name);
                   if($activeTab->getName() == $name)
