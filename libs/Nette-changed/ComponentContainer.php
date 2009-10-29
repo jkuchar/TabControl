@@ -19,8 +19,6 @@
 
 
 
-
-
 require_once dirname(__FILE__) . '/Component.php';
 
 require_once dirname(__FILE__) . '/IComponentContainer.php';
@@ -263,9 +261,6 @@ class ComponentContainer extends Component implements IComponentContainer
 	}
 
 }
-
-
-
 
 
 

@@ -12,7 +12,7 @@ require_once dirname(__FILE__) . '/NumericColumn.php';
  * @license    New BSD License
  * @example    http://nettephp.com/extras/datagrid
  * @package    Nette\Extras\DataGrid
- * @version    $Id: CheckboxColumn.php 44 2009-07-30 09:24:56Z mail@romansklenar.cz $
+ * @version    $Id: CheckboxColumn.php 51 2009-09-01 18:53:55Z mail@romansklenar.cz $
  */
 class CheckboxColumn extends NumericColumn
 {
@@ -55,7 +55,7 @@ class CheckboxColumn extends NumericColumn
 		$column = $this->getName();
 		$value = (int)(bool)$value;
 		$cond = array();
-		if ($value) $cond[] = array("[$column] > %b", TRUE);
+		if ($value) $cond[] = array("[$column] >= %b", TRUE);
 		else $cond[] = array("[$column] = %b", FALSE, " OR [$column] IS NULL");
 		$datagrid->dataSource->where('%and', $cond);
 	}

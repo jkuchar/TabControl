@@ -19,8 +19,6 @@
 
 
 
-
-
 require_once dirname(__FILE__) . '/../ComponentContainer.php';
 
 require_once dirname(__FILE__) . '/../Forms/INamingContainer.php';
@@ -485,6 +483,16 @@ class FormContainer extends ComponentContainer implements ArrayAccess, INamingCo
 		if ($component !== NULL) {
 			$this->removeComponent($component);
 		}
+	}
+
+
+
+	/**
+	 * Prevents cloning.
+	 */
+	final public function __clone()
+	{
+		throw new NotImplementedException('Form cloning is not supported yet.');
 	}
 
 }

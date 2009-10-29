@@ -12,7 +12,6 @@ abstract class BasePresenter extends /*Nette\Application\*/Presenter {
             // Když není k dispozici firebug a je to ajaxový požadavek, tak začni logovat, jako kdyby byl požadavek na produkčním serveru, ať se alespoň něco dozvíme
             Debug::enable(Debug::PRODUCTION);
         }
-        $this->oldLayoutMode = false;
         parent::startup();
     }
 

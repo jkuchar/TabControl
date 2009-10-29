@@ -19,8 +19,6 @@
 
 
 
-
-
 require_once dirname(__FILE__) . '/../../Object.php';
 
 
@@ -565,9 +563,3 @@ class LatteFilter extends Object
 	}
 
 }
-
-
-
-/** @deprecated */
-class CurlyBracketsFilter extends LatteFilter {}
-class CurlyBracketsMacros extends LatteMacros {}

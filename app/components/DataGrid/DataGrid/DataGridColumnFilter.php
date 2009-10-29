@@ -12,7 +12,7 @@ require_once dirname(__FILE__) . '/IDataGridColumnFilter.php';
  * @license    New BSD License
  * @example    http://nettephp.com/extras/datagrid
  * @package    Nette\Extras\DataGrid
- * @version    $Id: DataGridColumnFilter.php 42 2009-07-27 13:55:50Z mail@romansklenar.cz $
+ * @version    $Id: DataGridColumnFilter.php 52 2009-10-20 19:29:29Z mail@romansklenar.cz $
  */
 abstract class DataGridColumnFilter extends Component implements IDataGridColumnFilter
 {
@@ -70,7 +70,7 @@ abstract class DataGridColumnFilter extends Component implements IDataGridColumn
 	 */
 	public function setValue($value)
 	{
-		$control = $this->getFormControl();
-		$control->value = $this->value = $value;
+		$this->getFormControl()->setDefaultValue($value);
+		$this->value = $value;
 	}
 }

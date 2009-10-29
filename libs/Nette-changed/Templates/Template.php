@@ -19,8 +19,6 @@
 
 
 
-
-
 require_once dirname(__FILE__) . '/../Templates/BaseTemplate.php';
 
 require_once dirname(__FILE__) . '/../Templates/IFileTemplate.php';
@@ -44,6 +42,19 @@ class Template extends BaseTemplate implements IFileTemplate
 
 	/** @var string */
 	private $file;
+
+
+
+	/**
+	 * Constructor.
+	 * @param  string  template file path
+	 */
+	public function __construct($file = NULL)
+	{
+		if ($file !== NULL) {
+			$this->setFile($file);
+		}
+	}
 
 
 

@@ -19,8 +19,6 @@
 
 
 
-
-
 /**
  * Helpers for Presenter & PresenterComponent.
  *

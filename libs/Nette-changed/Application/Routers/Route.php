@@ -19,8 +19,6 @@
 
 
 
-
-
 require_once dirname(__FILE__) . '/../../Object.php';
 
 require_once dirname(__FILE__) . '/../../Application/IRouter.php';
@@ -109,16 +107,16 @@ class Route extends Object implements IRouter
 	private $re;
 
 	/** @var array of [value & fixity, filterIn, filterOut] */
-	protected $metadata = array();
+	private $metadata = array();
 
 	/** @var array  */
-	protected $xlat;
+	private $xlat;
 
 	/** @var int HOST, PATH, RELATIVE */
-	protected $type;
+	private $type;
 
 	/** @var int */
-	protected $flags;
+	private $flags;
 
 
 
@@ -268,19 +266,19 @@ class Route extends Object implements IRouter
 		$metadata = $this->metadata;
 
 		$presenter = $appRequest->getPresenterName();
-		if (isset($metadata[self::MODULE_KEY])) {
-			if (isset($metadata[self::MODULE_KEY]['fixity'])) {
-				$a = strlen($metadata[self::MODULE_KEY][self::VALUE]);
-				if (substr($presenter, $a, 1) !== ':') {
-					return NULL; // module not match
-				}
+		$params[self::PRESENTER_KEY] = $presenter;
+
+		if (isset($metadata[self::MODULE_KEY])) { // try split into module and [submodule:]presenter parts
+			$module = $metadata[self::MODULE_KEY];
+			if (isset($module['fixity']) && strncasecmp($presenter, $module[self::VALUE] . ':', strlen($module[self::VALUE]) + 1) === 0) {
+				$a = strlen($module[self::VALUE]);
 			} else {
 				$a = strrpos($presenter, ':');
 			}
-			$params[self::MODULE_KEY] = substr($presenter, 0, $a);
-			$params[self::PRESENTER_KEY] = substr($presenter, $a + 1);
-		} else {
-			$params[self::PRESENTER_KEY] = $presenter;
+			if ($a !== FALSE) {
+				$params[self::MODULE_KEY] = substr($presenter, 0, $a);
+				$params[self::PRESENTER_KEY] = substr($presenter, $a + 1);
+			}
 		}
 
 		foreach ($metadata as $name => $meta) {
@@ -314,7 +312,7 @@ class Route extends Object implements IRouter
 		// compositing path
 		$sequence = $this->sequence;
 		$brackets = array();
-		$required = NULL; // NULL for auto-optional
+		$required = 0;
 		$uri = '';
 		$i = count($sequence) - 1;
 		do {
@@ -346,11 +344,7 @@ class Route extends Object implements IRouter
 				unset($params[$name]);
 
 			} elseif (isset($metadata[$name]['fixity'])) { // has default value?
-				if ($required === NULL && !$brackets) { // auto-optional
-					$uri = '';
-				} else {
-					$uri = $metadata[$name]['defOut'] . $uri;
-				}
+				$uri = $metadata[$name]['defOut'] . $uri;
 
 			} else {
 				return NULL; // missing parameter '$name'
@@ -413,21 +407,27 @@ class Route extends Object implements IRouter
 			}
 		}
 
+		// PARSE MASK
+		$parts = preg_split(
+			'/<([^># ]+) *([^>#]*)(#?[^>{}]*)>|(\{!?|\}|\s*\?.*)/',  // <parameter-name [pattern] [#class]> or { or } or ?...
+			$mask,
+			-1,
+			PREG_SPLIT_DELIM_CAPTURE
+		);
 
-		// 1) PARSE QUERY PART OF MASK
 		$this->xlat = array();
-		$pos = strpos($mask, ' ? ');
-		if ($pos !== FALSE) {
+		$i = count($parts) - 1;
+
+		// PARSE QUERY PART OF MASK
+		if (isset($parts[$i - 1]) && substr(ltrim($parts[$i - 1]), 0, 1) === '?') {
 			preg_match_all(
 				'/(?:([a-zA-Z0-9_.-]+)=)?<([^># ]+) *([^>#]*)(#?[^>]*)>/', // name=<parameter-name [pattern][#class]>
-				substr($mask, $pos + 1),
+				$parts[$i - 1],
 				$matches,
 				PREG_SET_ORDER
 			);
-			$mask = rtrim(substr($mask, 0, $pos));
-
 			foreach ($matches as $match) {
-				list(, $param, $name, $pattern, $class) = $match;  // $pattern is unsed
+				list(, $param, $name, $pattern, $class) = $match;  // $pattern is not used
 
 				if ($class !== '') {
 					if (!isset(self::$styles[$class])) {
@@ -458,36 +458,27 @@ class Route extends Object implements IRouter
 					$this->xlat[$name] = $param;
 				}
 			}
+			$i -= 5;
 		}
 
-
-		// 2) PARSE URI-PATH PART OF MASK
-		$parts = preg_split(
-			'/<([^># ]+) *([^>#]*)(#?[^>{}]*)>|(\{!?|\})/',  // <parameter-name [pattern] [#class]> or { or }
-			$mask,
-			-1,
-			PREG_SPLIT_DELIM_CAPTURE
-		);
-
 		$brackets = 0; // optional level
-		$autoOptional = TRUE;
-		$sequence = array();
-		$i = count($parts) - 1;
 		$re = '';
+		$sequence = array();
+		$autoOptional = array(0, 0); // strlen($re), count($sequence)
 		do {
 			array_unshift($sequence, $parts[$i]);
 			$re = preg_quote($parts[$i], '#') . $re;
 			if ($i === 0) break;
 			$i--;
 
-			$bracket = $parts[$i]; // { or }
-			if ($bracket === '{' || $bracket === '}' || $bracket === '{!') {
-				$brackets += $bracket[0] === '{' ? -1 : 1;
+			$part = $parts[$i]; // { or }
+			if ($part === '{' || $part === '}' || $part === '{!') {
+				$brackets += $part[0] === '{' ? -1 : 1;
 				if ($brackets < 0) {
-					throw new InvalidArgumentException("Unexpected '$bracket' in mask '$mask'.");
+					throw new InvalidArgumentException("Unexpected '$part' in mask '$mask'.");
 				}
-				array_unshift($sequence, $bracket);
-				$re = ($bracket[0] === '{' ? '(?:' : ')?') . $re;
+				array_unshift($sequence, $part);
+				$re = ($part[0] === '{' ? '(?:' : ')?') . $re;
 				$i -= 4;
 				continue;
 			}
@@ -531,7 +522,7 @@ class Route extends Object implements IRouter
 			}
 
 			$meta['filterTable2'] = empty($meta[self::FILTER_TABLE]) ? NULL : array_flip($meta[self::FILTER_TABLE]);
-			if (isset($meta[self::VALUE])) {
+			if (array_key_exists(self::VALUE, $meta)) {
 				if (isset($meta['filterTable2'][$meta[self::VALUE]])) {
 					$meta['defOut'] = $meta['filterTable2'][$meta[self::VALUE]];
 
@@ -553,14 +544,13 @@ class Route extends Object implements IRouter
 				$meta['fixity'] = self::PATH_OPTIONAL;
 
 			} elseif (isset($meta['fixity'])) { // auto-optional
-				if (!$autoOptional) {
-					throw new InvalidArgumentException("Parameter '$name' must not be optional because parameters standing on the right side are not optional.");
-				}
-				$re = '(?:' . $re . ')?';
+				$re = '(?:' . substr_replace($re, ')?', strlen($re) - $autoOptional[0], 0);
+				array_splice($sequence, count($sequence) - $autoOptional[1], 0, array('}', ''));
+				array_unshift($sequence, '{', '');
 				$meta['fixity'] = self::PATH_OPTIONAL;
 
 			} else {
-				$autoOptional = FALSE;
+				$autoOptional = array(strlen($re), count($sequence));
 			}
 
 			$metadata[$name] = $meta;

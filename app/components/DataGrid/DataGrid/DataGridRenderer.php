@@ -12,7 +12,7 @@ require_once dirname(__FILE__) . '/IDataGridRenderer.php';
  * @license    New BSD License
  * @example    http://nettephp.com/extras/datagrid
  * @package    Nette\Extras\DataGrid
- * @version    $Id: DataGridRenderer.php 45 2009-08-03 08:47:36Z mail@romansklenar.cz $
+ * @version    $Id: DataGridRenderer.php 51 2009-09-01 18:53:55Z mail@romansklenar.cz $
  */
 class DataGridRenderer extends Object implements IDataGridRenderer
 {
@@ -108,6 +108,9 @@ class DataGridRenderer extends Object implements IDataGridRenderer
 
 	/** @var array  of function(Html $cell, string $column, mixed $value) */
 	public $onCellRender;
+
+	/** @var array  of function(Html $action, DibiRow $data) */
+	public $onActionRender;
 
 
 
@@ -543,6 +546,7 @@ class DataGridRenderer extends Object implements IDataGridRenderer
 					$html = $action->getHtml();
 					$html->title($this->dataGrid->translate($html->title));
 					$action->generateLink(array($primary => $data[$primary]));
+					$this->onActionRender($html, $data);
 					$value .= $html->render() . ' ';
 				}
 				$cell->addClass('actions');

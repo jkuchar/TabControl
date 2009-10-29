@@ -19,8 +19,6 @@
 
 
 
-
-
 /**
  * Nette environment and configuration.
  *
@@ -460,7 +458,7 @@ final class Environment
 	public static function getSession($namespace = NULL)
 	{
 		$handler = self::getService('Nette\Web\Session');
-		return func_num_args() === 0 ? $handler : $handler->getNamespace($namespace);
+		return $namespace === NULL ? $handler : $handler->getNamespace($namespace);
 	}
 
 

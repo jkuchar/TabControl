@@ -19,8 +19,6 @@
 
 
 
-
-
 require_once dirname(__FILE__) . '/../Object.php';
 
 require_once dirname(__FILE__) . '/../Caching/ICacheStorage.php';
@@ -43,10 +41,10 @@ class MemcachedStorage extends Object implements ICacheStorage
 	/**#@-*/
 
 	/** @var Memcache */
-	protected $memcache;
+	private $memcache;
 
 	/** @var string */
-	protected $prefix;
+	private $prefix;
 
 
 

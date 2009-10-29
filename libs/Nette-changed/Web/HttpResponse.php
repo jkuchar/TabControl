@@ -19,8 +19,6 @@
 
 
 
-
-
 require_once dirname(__FILE__) . '/../Object.php';
 
 require_once dirname(__FILE__) . '/../Web/IHttpResponse.php';
@@ -47,7 +45,7 @@ final class HttpResponse extends Object implements IHttpResponse
 	public $cookieDomain = '';
 
 	/** @var string The path in which the cookie will be available */
-	public $cookiePath = '';
+	public $cookiePath = '/';
 
 	/** @var string The path in which the cookie will be available */
 	public $cookieSecure = FALSE;

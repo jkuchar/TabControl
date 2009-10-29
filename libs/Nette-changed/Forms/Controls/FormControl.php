@@ -19,8 +19,6 @@
 
 
 
-
-
 require_once dirname(__FILE__) . '/../../Component.php';
 
 require_once dirname(__FILE__) . '/../../Forms/IFormControl.php';
@@ -113,6 +111,7 @@ abstract class FormControl extends Component implements IFormControl
 	protected function attached($form)
 	{
 		if (!$this->disabled && $form instanceof Form && $form->isAnchored() && $form->isSubmitted()) {
+			$this->htmlName = NULL;
 			$this->loadHttpData();
 		}
 	}
@@ -343,8 +342,8 @@ abstract class FormControl extends Component implements IFormControl
 	 */
 	public function loadHttpData()
 	{
-		$path = strtr(str_replace(']', '', $this->getHtmlName()), '.', '_');
-		$this->setValue(ArrayTools::get($this->getForm()->getHttpData(), explode('[', $path)));
+		$path = explode('[', strtr(str_replace(']', '', $this->getHtmlName()), '.', '_'));
+		$this->setValue(ArrayTools::get($this->getForm()->getHttpData(), $path));
 	}
 
 

@@ -19,8 +19,6 @@
 
 
 
-
-
 require_once dirname(__FILE__) . '/../Loaders/AutoLoader.php';
 
 
@@ -70,8 +68,8 @@ class NetteLoader extends AutoLoader
 		'configurator' => '/Configurator.php',
 		'control' => '/Application/Control.php',
 		'conventionalrenderer' => '/Forms/Renderers/ConventionalRenderer.php',
-		'curlybracketsfilter' => '/Templates/Filters/LatteFilter.php',
-		'curlybracketsmacros' => '/Templates/Filters/LatteFilter.php',
+		'curlybracketsfilter' => '/compatibility/OldLatteMacros.php',
+		'curlybracketsmacros' => '/compatibility/OldLatteMacros.php',
 		'debug' => '/Debug.php',
 		'deprecatedexception' => '/exceptions.php',
 		'directorynotfoundexception' => '/exceptions.php',
@@ -159,6 +157,8 @@ class NetteLoader extends AutoLoader
 		'notsupportedexception' => '/exceptions.php',
 		'object' => '/Object.php',
 		'objectmixin' => '/ObjectMixin.php',
+		'oldlattemacros' => '/compatibility/OldLatteMacros.php',
+		'oldpresenter' => '/compatibility/OldPresenter.php',
 		'paginator' => '/Paginator.php',
 		'permission' => '/Security/Permission.php',
 		'presenter' => '/Application/Presenter.php',
@@ -187,7 +187,7 @@ class NetteLoader extends AutoLoader
 		'simpleloader' => '/Loaders/SimpleLoader.php',
 		'simplerouter' => '/Application/Routers/SimpleRouter.php',
 		'smartcachingiterator' => '/SmartCachingIterator.php',
-		'snippethelper' => '/Templates/Filters/SnippetHelper.php',
+		'snippethelper' => '/compatibility/SnippetHelper.php',
 		'string' => '/String.php',
 		'submitbutton' => '/Forms/Controls/SubmitButton.php',
 		'template' => '/Templates/Template.php',
