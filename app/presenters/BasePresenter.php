@@ -8,10 +8,10 @@ abstract class BasePresenter extends /*Nette\Application\*/Presenter {
             $session->start();
         }
 
-        if($this->isAjax() and !eregi("FirePHP",Environment::getHttpRequest()->getHeader("User-agent", ""))) {
+        /*if($this->isAjax() and !preg_match("/FirePHP/i",Environment::getHttpRequest()->getHeader("User-agent", ""))) {
             // Když není k dispozici firebug a je to ajaxový požadavek, tak začni logovat, jako kdyby byl požadavek na produkčním serveru, ať se alespoň něco dozvíme
-            Debug::enable(Debug::PRODUCTION);
-        }
+            Debug::enable(Debug::PRODUCTION); // V PHP 5.3 pád Apache
+        }*/
         parent::startup();
     }
 
