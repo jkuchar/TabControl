@@ -29,7 +29,7 @@ For more information please see http://nettephp.com
                       $li->addClass("ui-state-default");
                 ?>
                 {!$li->startTag()}
-                <a id="{$control->getSnippetId('div_ul_li_a__'.$name)}" href="{!$component->generateSelectLink($name)}">
+                <a id="{$control->getSnippetId('div_ul_li_a__'.$name)}" href="{$component->generateSelectLink($name)}">
                        <span>{!$tab->header}</span>
                     </a>
                 {!$li->endTag()}
