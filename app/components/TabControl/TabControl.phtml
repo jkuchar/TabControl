@@ -56,6 +56,8 @@ For more information please see http://nettephp.com
     @{if $control->mode !== TabControl::MODE_NO_AJAX}
         <script type="text/JavaScript">
             $(function(){
+
+		{* Nastavení načítacího textu *}
 		{if is_string($control->loaderText)}
 			{foreach $control->components AS $name => $tab}
 				{if $activeTab->getName() != $name}
@@ -65,6 +67,8 @@ For more information please see http://nettephp.com
 				{/if}
 			{/foreach}
 		{/if}
+
+		{* Automatická kofigurace jednotlivých tabů *}
                 {foreach $control->tabs AS $name => $tab}
                         $("#"+{$control->getSnippetId('div_ul_li_a__'.$name)}).each(function(){
                             var jThis = $(this);
@@ -114,13 +118,18 @@ For more information please see http://nettephp.com
 		// Přeřazování tabů
 		{if $control->sortable}
 			var options = {
-				axis:'x',
-				stop:function(e,ui){
+				axis: 'x',
+				stop: function(e,ui){
 					// Workaround for Opera: http://forum.nettephp.com/cs/viewtopic.php?pid=15968#p15968
 					$(ui.item).css('left','auto');
 					$(ui.item).css('top','auto');
-					var order = $(this).sortable("toArray");
-					$.post({link saveTabsOrder}, {"{!$component->getParamId("order")}[]":order});
+
+					$.postJSON(
+						{link saveTabsOrder},
+						{
+							"{!$component->getParamId('order')}[]": $(this).sortable("toArray")
+						}
+					);
 				}
 			};
 
