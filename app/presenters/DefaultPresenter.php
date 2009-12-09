@@ -13,17 +13,6 @@ class DefaultPresenter extends BasePresenter {
 
 
 
-    /**
-     * Returns array of classes persistent parameters. They have public visibility and are non-static.
-     * This default implementation detects persistent parameters by annotation @persistent.
-     * @return array
-     */
-    public static function getPersistentParams() {
-        return array("id");
-    }
-
-
-
     function createComponentTabs($name) {
         $tc = new TabControl($this,$name);
         $tc->mode = TabControl::MODE_LAZY;
