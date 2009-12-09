@@ -15,13 +15,15 @@ class DefaultPresenter extends BasePresenter {
 
 	function createComponentTabs($name) {
 		$tc = new TabControl($this,$name);
-		$tc->mode = TabControl::MODE_PRELOAD;
+		$tc->mode = TabControl::MODE_AUTO; // Výchozí
 		$tc->sortable = true;
-		//$tc->jQueryTabsOptions = "{ fx: { height: 'toggle',opacity:'toggle',marginTop:'toggle',marginBottom:'toggle',paddingTop:'toggle',paddingBottom:'toggle'} }";
 		//$tc->handlerComponent = $this; // Is automatic
 
+		// Tento krásný efekt se dá použít prakticky jen u MODE_PRELOAD, protože jinak se animace chovají dost podivně.
+		//$tc->jQueryTabsOptions = "{ fx: { height: 'toggle',opacity:'toggle',marginTop:'toggle',marginBottom:'toggle',paddingTop:'toggle',paddingBottom:'toggle'} }";
+
 		$t = $tc->addTab("datagrid");
-		$t->header = "<i>Data</i>Grid";
+		$t->header = "<i>Data</i>Grid"; // HTML popisek - pozor na XSS! ( http://en.wikipedia.org/wiki/Cross-site_scripting )
 		$t->contentFactory = array($this,"createTabDataGrid");
 		$t->hasSnippets = true; // Potřeba nastavit u každého tabu, ve kterém budou snippety! Jinak nebude fungovat AJAX! Má stejnou funkci jako @ v šablonách
 
@@ -56,6 +58,11 @@ class DefaultPresenter extends BasePresenter {
 		$t = $tc->addTab("InnerTabControl");
 		$t->header = "TabControl";
 		$t->contentFactory = array($this,"createTabInnerTabControl");
+		$t->hasSnippets = true;
+
+		$t = $tc->addTab("Modes");
+		$t->header = "Módy";
+		$t->contentFactory = array($this,"createTabModes");
 		$t->hasSnippets = true;
 
 		return $tc;
@@ -273,7 +280,6 @@ class DefaultPresenter extends BasePresenter {
 
 	function createTabInnerTabControl($name, Tab $tab) {
 		$tc = new TabControl($tab,$name);
-		$tc->mode = TabControl::MODE_LAZY;
 		$tc->sortable = true;
 		//$tc->jQueryTabsOptions = "{ fx: { height: 'toggle',opacity:'toggle',marginTop:'toggle',marginBottom:'toggle',paddingTop:'toggle',paddingBottom:'toggle'} }";
 		//$tc->handlerComponent = $this; // Is automatic
@@ -316,9 +322,10 @@ class DefaultPresenter extends BasePresenter {
 		return $template;
 	}
 
-	function createComponentAnotherTabControl($name) {
-		$tc = new TabControl($this,$name);
-		$tc->mode = TabControl::MODE_LAZY;
+	function createComponentAnotherTabControl($name, $mode = TabControl::MODE_PRELOAD,$parent = null) {
+		if($parent===null) $parent = $this;
+		$tc = new TabControl($parent,$name);
+		$tc->mode = $mode;
 		$tc->sortable = true;
 
 		// Obsah tabů si převezmene z příkladu tabu TabControl
@@ -331,6 +338,50 @@ class DefaultPresenter extends BasePresenter {
 		$t->contentFactory = array($this,"createInnerTab2");
 
 		return $tc;
+	}
+
+	function createTabModes($name,Tab $tab) {
+		$tc = new TabControl($tab,$name);
+		$tc->mode = TabControl::MODE_LAZY;
+
+		// Obsah tabů si převezmene z příkladu tabu TabControl
+		$t = $tc->addTab("Lazy");
+		$t->header = "Lazy";
+		$t->contentFactory = array($this,"createComponentModesLazy");
+		$t->hasSnippets = true;
+
+		$t = $tc->addTab("Preload");
+		$t->header = "Preload";
+		$t->contentFactory = array($this,"createComponentModesPreload");
+		$t->hasSnippets = true;
+
+		$t = $tc->addTab("NoAjax");
+		$t->header = "No ajax";
+		$t->contentFactory = array($this,"createComponentModesNoAjax");
+		$t->hasSnippets = true;
+
+		$t = $tc->addTab("Reload");
+		$t->header = "Reload";
+		$t->contentFactory = array($this,"createComponentModesReload");
+		$t->hasSnippets = true;
+
+		return $tc;
+	}
+
+	function createComponentModesLazy($name,$tab) {
+		return $this->createComponentAnotherTabControl($name, TabControl::MODE_LAZY,$tab);
+	}
+
+	function createComponentModesPreload($name,$tab) {
+		return $this->createComponentAnotherTabControl($name, TabControl::MODE_PRELOAD,$tab);
+	}
+
+	function createComponentModesNoAjax($name,$tab) {
+		return $this->createComponentAnotherTabControl($name, TabControl::MODE_NO_AJAX,$tab);
+	}
+	
+	function createComponentModesReload($name,$tab) {
+		return $this->createComponentAnotherTabControl($name, TabControl::MODE_RELOAD,$tab);
 	}
 
 
