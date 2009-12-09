@@ -476,21 +476,27 @@ class TabControl extends Control {
 	}
 
 
-
-	function handleSaveTabsOrder() {
-		// Nette řadí přijaté pole podle abecedy. :( Musíme použít přímý přístup
-		$order = $_GET[$this->getUniqueId()."-order"];
+	/**
+	 * Saves new order of tabs
+	 *
+	 * $order must be sent throw POST, because GET is reordered in Nette
+	 *
+	 * @param array $order
+	 */
+	function handleSaveTabsOrder($order) {
 		$newOrder = array();
-		foreach($order AS $tabWithTree) {
-			$tabName = explode("__", $tabWithTree);
-			$newOrder[] = $tabName[count($tabName)-1];
+		foreach($order AS $tmp) {
+			$tmp2 = explode("__", $tmp);
+			$newOrder[] = $tmp2[count($tmp2)-1];
 		}
-		$this->onOrderChange($newOrder,$this);
+
 		if(!$this->saveTabsOrder[0]->tryCall($this->saveTabsOrder[1], array("order"=>$newOrder))) {
 			throw new InvalidStateException("TabControl::saveTabsOrder is not callable!");
 		}
-		Environment::getHttpResponse()->setContentType("application/json");
-		die("{}");
+		$this->onOrderChange($newOrder,$this);
+
+		// Workaround for: http://forum.nettephp.com/cs/2834-podivne-chovani-snippetu-tech-starych
+		$this->presenter->terminate(new JsonResponse($this->presenter->payload));
 	}
 
 

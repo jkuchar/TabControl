@@ -56,15 +56,15 @@ For more information please see http://nettephp.com
     @{if $control->mode !== TabControl::MODE_NO_AJAX}
         <script type="text/JavaScript">
             $(function(){
-                {if is_string($control->loaderText)}
-                    {foreach $control->components AS $name => $tab}
-                        {if $activeTab->getName() != $name}
-                            $("#"+{$control->getSnippetId($name)}).each(function(){
-                                $(this).html({$control->loaderText});
-                            });
-                        {/if}
-                    {/foreach}
-                {/if}
+		{if is_string($control->loaderText)}
+			{foreach $control->components AS $name => $tab}
+				{if $activeTab->getName() != $name}
+					$("#"+{$control->getSnippetId($name)}).each(function(){
+						$(this).html({$control->loaderText});
+					});
+				{/if}
+			{/foreach}
+		{/if}
                 {foreach $control->tabs AS $name => $tab}
                         $("#"+{$control->getSnippetId('div_ul_li_a__'.$name)}).each(function(){
                             var jThis = $(this);
@@ -108,22 +108,31 @@ For more information please see http://nettephp.com
                     $.getJSON({link preload!});
                 {/if}
                 */
-
+		// Zavoláme jQueryUI Tabs
                 $("#"+{$control->DOMtabsID}).tabs({!$component->jQueryTabsOptions});
-                {if $control->sortable}
-                var options = {
-                        axis:'x',
-                        stop:function(e,ui){
-                            $(ui.item).css('left','auto');
-                            $(ui.item).css('top','auto');
-                            var order = $(this).sortable("toArray");
-                            $.get({link saveTabsOrder! 'order' => 'order'}, {"{!$component->getUniqueId()}-order[]":order});
-                        }
-                };
-                if(!$.browser.msie) options.distance = 25;
-                $("#"+{$control->DOMtabsID}).find(".ui-tabs-nav") // Pokracujeme v float z predchoziho radku
-                    .sortable(options);
-                {/if};
+
+		// Přeřazování tabů
+		{if $control->sortable}
+			var options = {
+				axis:'x',
+				stop:function(e,ui){
+					// Workaround for Opera: http://forum.nettephp.com/cs/viewtopic.php?pid=15968#p15968
+					$(ui.item).css('left','auto');
+					$(ui.item).css('top','auto');
+					var order = $(this).sortable("toArray");
+					$.post({link saveTabsOrder}, {"{!$component->getParamId("order")}[]":order});
+				}
+			};
+
+			// V IE jinak označí TabControl jako text
+			if(!$.browser.msie) {
+				options.distance = 25;
+			}
+
+			$("#"+{$control->DOMtabsID})
+			.find(".ui-tabs-nav")
+			.sortable(options);
+		{/if};
             })
         </script>
         {snippet JavaScript}
