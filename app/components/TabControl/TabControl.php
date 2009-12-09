@@ -22,9 +22,9 @@
  */
 class TabControl extends Control {
 
-    /**************************************************************************/
-    /*                               Variables                                */
-    /**************************************************************************/
+	/**************************************************************************/
+	/*                               Variables                                */
+	/**************************************************************************/
 
 	/**
 	 * Container of tabs
@@ -205,9 +205,9 @@ class TabControl extends Control {
 
 
 
-    /**************************************************************************/
-    /*                            Main methods                                */
-    /**************************************************************************/
+	/**************************************************************************/
+	/*                            Main methods                                */
+	/**************************************************************************/
 
 	/**
 	 * Adds tab
@@ -314,7 +314,8 @@ class TabControl extends Control {
 		if($invalidate === true) {
 			if($tab === self::REDRAW_ALL) {
 				$this->invalidateControl();
-			}else {
+			}
+			else {
 				$this->invalidateControl($tabName);
 			}
 		}
@@ -348,9 +349,9 @@ class TabControl extends Control {
 	function selectAnchor($tab,$caption="") {
 		$this->tabExists($tab,TRUE);
 		return Html::el("a")
-		->setHtml($caption)
-		->href($this->generateSelectLink($tab))
-		->onclick("$('#".$this->DOMtabsID."').tabs('select','".$this->getSnippetId($tab)."');return false;");
+		    ->setHtml($caption)
+		    ->href($this->generateSelectLink($tab))
+		    ->onclick("$('#".$this->DOMtabsID."').tabs('select','".$this->getSnippetId($tab)."');return false;");
 	}
 
 
@@ -367,9 +368,9 @@ class TabControl extends Control {
 
 
 
-    /**************************************************************************/
-    /*                        Getters and setters                             */
-    /**************************************************************************/
+	/**************************************************************************/
+	/*                        Getters and setters                             */
+	/**************************************************************************/
 
 	/**
 	 * Tabs for redraw
@@ -451,9 +452,9 @@ class TabControl extends Control {
 		return $tabs;
 	}
 
-    /**************************************************************************/
-    /*                              Handlers                                  */
-    /**************************************************************************/
+	/**************************************************************************/
+	/*                              Handlers                                  */
+	/**************************************************************************/
 
 	/**
 	 * What to do when tab is preloading
@@ -476,21 +477,21 @@ class TabControl extends Control {
 
 
 
-    function handleSaveTabsOrder() {
-    // Nette řadí přijaté pole podle abecedy. :( Musíme použít přímý přístup
-        $order = $_GET[$this->getUniqueId()."-order"];
-        $newOrder = array();
-        foreach($order AS $tabWithTree) {
-            $tabName = explode("__", $tabWithTree);
-            $newOrder[] = $tabName[count($tabName)-1];
-        }
-        $this->onOrderChange($newOrder,$this);
-        if(!$this->saveTabsOrder[0]->tryCall($this->saveTabsOrder[1], array("order"=>$newOrder))) {
-            throw new InvalidStateException("TabControl::saveTabsOrder is not callable!");
-        }
-	Environment::getHttpResponse()->setContentType("application/json");
-	die("{}");
-    }
+	function handleSaveTabsOrder() {
+		// Nette řadí přijaté pole podle abecedy. :( Musíme použít přímý přístup
+		$order = $_GET[$this->getUniqueId()."-order"];
+		$newOrder = array();
+		foreach($order AS $tabWithTree) {
+			$tabName = explode("__", $tabWithTree);
+			$newOrder[] = $tabName[count($tabName)-1];
+		}
+		$this->onOrderChange($newOrder,$this);
+		if(!$this->saveTabsOrder[0]->tryCall($this->saveTabsOrder[1], array("order"=>$newOrder))) {
+			throw new InvalidStateException("TabControl::saveTabsOrder is not callable!");
+		}
+		Environment::getHttpResponse()->setContentType("application/json");
+		die("{}");
+	}
 
 
 
@@ -516,9 +517,9 @@ class TabControl extends Control {
 
 
 
-    /**************************************************************************/
-    /*                         Extension methods                              */
-    /**************************************************************************/
+	/**************************************************************************/
+	/*                         Extension methods                              */
+	/**************************************************************************/
 
 	/**
 	 * Is $component receiver of $signal?
@@ -537,9 +538,9 @@ class TabControl extends Control {
 
 
 
-    /**************************************************************************/
-    /*                              Others                                    */
-    /**************************************************************************/
+	/**************************************************************************/
+	/*                              Others                                    */
+	/**************************************************************************/
 
 	/**
 	 * Descendant can override this method to disallow insert a child by throwing an \InvalidStateException.

@@ -13,53 +13,53 @@ date_default_timezone_set('Europe/Prague');
  * Automatické načítání tříd
  */
 
-    $loader = new RobotLoader();
-    $loader->addDirectory(APP_DIR);
-    $loader->addDirectory(LIBS_DIR);
-    $loader->register();
+$loader = new RobotLoader();
+$loader->addDirectory(APP_DIR);
+$loader->addDirectory(LIBS_DIR);
+$loader->register();
 
 /**
  * Produkční nebo vývojový mód
  */
 
 
-    Environment::setName(Environment::DEVELOPMENT);
+Environment::setName(Environment::DEVELOPMENT);
 
-    $config = Environment::loadConfig();
-    //Debug::dump($config);
+$config = Environment::loadConfig();
+//Debug::dump($config);
 
-    Debug::enable(Debug::DEVELOPMENT);
-    // parametr logování chyb je NULL, takže se rozhodne podle autodetekce z Environment podle řežimu production, tzn: Environment::isProduction() ? 'logovat' : 'zobrazovat'
+Debug::enable(Debug::DEVELOPMENT);
+// parametr logování chyb je NULL, takže se rozhodne podle autodetekce z Environment podle řežimu production, tzn: Environment::isProduction() ? 'logovat' : 'zobrazovat'
 
-    if (Environment::getName() == Environment::DEVELOPMENT)
-      Debug::enableProfiler();
+if (Environment::getName() == Environment::DEVELOPMENT)
+	Debug::enableProfiler();
 
-    $application = Environment::getApplication();
+$application = Environment::getApplication();
 
-    $application->onStartup[] = 'BaseModel::initialize';
-    $application->onShutdown[] = 'BaseModel::disconnect';
+$application->onStartup[] = 'BaseModel::initialize';
+$application->onShutdown[] = 'BaseModel::disconnect';
 
 /**
  * Nastavení routování
  */
 
-    $router = $application->getRouter();
+$router = $application->getRouter();
 /*
     $application->errorPresenter = "Error";
     $application->catchExceptions = Environment::isProduction() ? TRUE : FALSE;
 */
-    $router[] = new Route('index.php', array(
-        'presenter' => 'Default',
-        'action' => 'default',
+$router[] = new Route('index.php', array(
+    'presenter' => 'Default',
+    'action' => 'default',
     ), Route::ONE_WAY);
 
-    $router[] = new Route('<presenter>/<action>/<id>', array(
-        'presenter' => 'Default',
-        'action' => 'default',
-        'id' => null,
-    ));
+$router[] = new Route('<presenter>/<action>/<id>', array(
+    'presenter' => 'Default',
+    'action' => 'default',
+    'id' => null,
+));
 
 /**
  * Spustí aplikaci
  */
-    $application->run();
+$application->run();
