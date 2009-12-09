@@ -4,9 +4,6 @@
 
 class DefaultPresenter extends BasePresenter {
 
-// Dokud se neopraví: http://forum.nettephp.com/cs/2301-dalsi-nekonecny-cyklus-canonicalize
-    public $autoCanonicalize = FALSE;
-
     /**
      * ID of the row for edit form
      * @var null|int
