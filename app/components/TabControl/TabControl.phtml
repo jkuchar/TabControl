@@ -76,7 +76,7 @@ For more information please see http://nettephp.com
                             {* ### MODE_PRELOAD ### *}
                             {if $control->mode == TabControl::MODE_PRELOAD}
                                 {if $activeTab->getName() != $name}
-                                    $.getJSON({link preload activeTab=>$name});
+                                    $.getJSON({link preload tab=>$name});
                                 {/if}
                             {/if}
                             
