@@ -124,11 +124,13 @@ For more information please see http://nettephp.com
 					$(ui.item).css('left','auto');
 					$(ui.item).css('top','auto');
 
-					$.postJSON(
+					$.post(
 						{link saveTabsOrder},
 						{
 							"{!$component->getParamId('order')}[]": $(this).sortable("toArray")
-						}
+						},
+						null, // Callback
+						"json" // Datatype
 					);
 				}
 			};
