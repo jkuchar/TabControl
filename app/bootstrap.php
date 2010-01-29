@@ -28,6 +28,7 @@ Environment::setName(Environment::DEVELOPMENT);
 $config = Environment::loadConfig();
 //Debug::dump($config);
 
+Debug::$strictMode = true;
 Debug::enable(Debug::DEVELOPMENT);
 // parametr logování chyb je NULL, takže se rozhodne podle autodetekce z Environment podle řežimu production, tzn: Environment::isProduction() ? 'logovat' : 'zobrazovat'
 
