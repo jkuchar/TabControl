@@ -2,6 +2,8 @@
 
 abstract class BasePresenter extends /*Nette\Application\*/Presenter {
 
+	public $oldLayoutMode = false;
+
 	protected function startup() {
 		$session = Environment::getSession();
 		if (!$session->isStarted()) {
@@ -13,14 +15,6 @@ abstract class BasePresenter extends /*Nette\Application\*/Presenter {
 		    Debug::enable(Debug::PRODUCTION); // V PHP 5.3 pád Apache
 		}*/
 		parent::startup();
-	}
-
-	protected function createTemplate() {
-		$template = parent::createTemplate();
-		$template->registerFilter('Nette\Templates\CurlyBracketsFilter::invoke');
-		//$template->registerFilter('Nette\Templates\TemplateFilters::netteLinks');
-		//$template->registerFilter('Nette\Templates\TemplateFilters::relativeLinks');
-		return $template;
 	}
 
 	/**
