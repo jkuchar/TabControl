@@ -791,7 +791,7 @@ class DataGrid extends Control implements ArrayAccess, INamingContainer
 		if ($this->getTranslator() !== NULL) {
 			$template->setTranslator($this->getTranslator());
 		}
-		$template->registerFilter('Nette\Templates\CurlyBracketsFilter::invoke');
+		//$template->registerFilter('Nette\Templates\CurlyBracketsFilter::invoke');
 		return $template;
 	}
 

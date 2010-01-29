@@ -265,7 +265,7 @@ class TabControl extends Control {
 			$this->tabsForDraw = array($this->getTab()=>true);
 
 		$template = $this->createTemplate();
-		$template->registerFilter('Nette\Templates\CurlyBracketsFilter::invoke');
+		//$template->registerFilter('Nette\Templates\CurlyBracketsFilter::invoke');
 		$template->setFile(DIRNAME(__FILE__)."/TabControl.phtml");
 		$template->activeTab = $this->tabs[$this->getTab()];
 		$template->render();
