@@ -5,26 +5,26 @@
 
 {* Obsah stránky *}
 @{block #content}
-    <h2>Externí ovládání TabControlu</h2>
-        <p>TabControl obsahuje metody, kterými se dá jednoduše ovládat (jak z PHP, tak od klienta).</p>
+	<h2>Externí ovládání TabControlu</h2>
+		<p>TabControl obsahuje metody, kterými se dá jednoduše ovládat (jak z PHP, tak od klienta).</p>
 
-        <h3>Odkazování na jiný tab v prohlížeči (pokud není AJAX, odkáže se normálně)</h3>
-            <p>Tato metoda je doporučená pokud nepotřebujete zpracovat nic na straně serveru. Prostě chcete jenom přepnout tab.</p>
-            {foreach $presenter["tabs"]->tabs AS $tabName => $tab}
-                {!$presenter["tabs"]->selectAnchor($tabName,$tab->header)}
-            {/foreach}
+		<h3>Odkazování na jiný tab v prohlížeči (pokud není AJAX, odkáže se normálně)</h3>
+			<p>Tato metoda je doporučená pokud nepotřebujete zpracovat nic na straně serveru. Prostě chcete jenom přepnout tab.</p>
+			{foreach $presenter["tabs"]->tabs AS $tabName => $tab}
+				{!$presenter["tabs"]->selectAnchor($tabName,$tab->header)}
+			{/foreach}
 
-        <h3>Odkázání na handler v presenteru, který nás přepne na jiný tab</h3>
-            <p>Tato metoda je doporučená, pokud potřebujete po kliknutí na odkaz provést něco na straně serveru.</p>
-            <h4>Přepni na...</h4>
-            {foreach $presenter["tabs"]->tabs AS $tabName => $tab}
-                <a href="{link prepniNa! $tabName}" class="ajax">{!$tab->header}</a> 
-            {/foreach}
-            <h4>Překresli...</h4>
-            {foreach $presenter["tabs"]->tabs AS $tabName => $tab}
-                <a href="{link prekresli! $tabName}" class="ajax">{!$tab->header}</a> 
-            {/foreach}
+		<h3>Odkázání na handler v presenteru, který nás přepne na jiný tab</h3>
+			<p>Tato metoda je doporučená, pokud potřebujete po kliknutí na odkaz provést něco na straně serveru.</p>
+			<h4>Přepni na...</h4>
+			{foreach $presenter["tabs"]->tabs AS $tabName => $tab}
+				<a href="{link prepniNa! $tabName}" class="ajax">{!$tab->header}</a> 
+			{/foreach}
+			<h4>Překresli...</h4>
+			{foreach $presenter["tabs"]->tabs AS $tabName => $tab}
+				<a href="{link prekresli! $tabName}" class="ajax">{!$tab->header}</a> 
+			{/foreach}
 
-    <h2 style="margin: 30px 0px 10px 0px;">Samotný TabControl</h2>
-    @{widget tabs}
+	<h2 style="margin: 30px 0px 10px 0px;">Samotný TabControl</h2>
+	@{widget tabs}
 @{/block}

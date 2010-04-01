@@ -4,58 +4,58 @@ This source file is subject to the "New BSD License".
 
 For more information please see http://nettephp.com
 
-@author     Jan Kuchař
-@copyright  Copyright (c) 2009 Jan Kuchař (http://mujserver.net)
-@license    New BSD License
-@link       http://nettephp.com/extras/tabcontrol
+@author	   Jan Kuchař
+@copyright Copyright (c) 2009 Jan Kuchař (http://mujserver.net)
+@license   New BSD License
+@link	   http://nettephp.com/extras/tabcontrol
 
 *}
 
 {snippet content}
-    <?php
-       $control->tabContainer->addClass("ui-tabs ui-widget ui-widget-content ui-corner-all");
-       $control->tabContainer->id = $control->DOMtabsID;
-    ?>
-    {!$control->tabContainer->startTag()}
-        {* Navigace v tabech *}
-        <ul class="ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all" id="{$control->getSnippetId('div_ul')}">
-            {foreach $control->tabs AS $name => $tab}
-                <?php
-                  $li = Html::el("li")->class("ui-tabs-panel ui-widget-content ui-state-default ui-corner-top");
-                  $li->id = $control->getSnippetId("div_ul_li__".$name);
-                  if($activeTab->getName() == $name)
-                      $li->addClass("ui-tabs-selected ui-state-active");
-                  else
-                      $li->addClass("ui-state-default");
-                ?>
-                {!$li->startTag()}
-                <a id="{$control->getSnippetId('div_ul_li_a__'.$name)}" href="{$component->generateSelectLink($name)}">
-                       <span>{!$tab->header}</span>
-                    </a>
-                {!$li->endTag()}
-            {/foreach}
-        </ul>
+	<?php
+	   $control->tabContainer->addClass("ui-tabs ui-widget ui-widget-content ui-corner-all");
+	   $control->tabContainer->id = $control->DOMtabsID;
+	?>
+	{!$control->tabContainer->startTag()}
+		{* Navigace v tabech *}
+		<ul class="ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all" id="{$control->getSnippetId('div_ul')}">
+			{foreach $control->tabs AS $name => $tab}
+				<?php
+				  $li = Html::el("li")->class("ui-tabs-panel ui-widget-content ui-state-default ui-corner-top");
+				  $li->id = $control->getSnippetId("div_ul_li__".$name);
+				  if($activeTab->getName() == $name)
+					  $li->addClass("ui-tabs-selected ui-state-active");
+				  else
+					  $li->addClass("ui-state-default");
+				?>
+				{!$li->startTag()}
+				<a id="{$control->getSnippetId('div_ul_li_a__'.$name)}" href="{$component->generateSelectLink($name)}">
+					   <span>{!$tab->header}</span>
+					</a>
+				{!$li->endTag()}
+			{/foreach}
+		</ul>
 
-        {* Výpis obsahu tabů *}
-        @{foreach $control->tabs AS $name => $tab}
-            {* Musí se provést vždy - proto zavináč *}
-            @{?
-                $container = Html::el("div")->addClass("ui-tabs-panel ui-widget-content ui-corner-bottom");
-                if($activeTab->getName() != $name)
-                    $container->addClass("ui-tabs-hide");
-            }
-            {snippet $name $container}
-                @{if isSet($component->tabsForDraw[$name])}
-                    @{? $tab->renderContent(); }
-                @{/if}
-                <div class="ui-helper-clearfix"></div>
-            {/snippet}
-        @{/foreach}
-    {!$control->tabContainer->endTag()}
+		{* Výpis obsahu tabů *}
+		@{foreach $control->tabs AS $name => $tab}
+			{* Musí se provést vždy - proto zavináč *}
+			@{?
+				$container = Html::el("div")->addClass("ui-tabs-panel ui-widget-content ui-corner-bottom");
+				if($activeTab->getName() != $name)
+					$container->addClass("ui-tabs-hide");
+			}
+			{snippet $name $container}
+				@{if isSet($component->tabsForDraw[$name])}
+					@{? $tab->renderContent(); }
+				@{/if}
+				<div class="ui-helper-clearfix"></div>
+			{/snippet}
+		@{/foreach}
+	{!$control->tabContainer->endTag()}
 
-    @{if $control->mode !== TabControl::MODE_NO_AJAX}
-        <script type="text/JavaScript">
-            $(function(){
+	@{if $control->mode !== TabControl::MODE_NO_AJAX}
+		<script type="text/JavaScript">
+			$(function(){
 
 		{* Nastavení načítacího textu *}
 		{if is_string($control->loaderText)}
@@ -69,51 +69,51 @@ For more information please see http://nettephp.com
 		{/if}
 
 		{* Automatická kofigurace jednotlivých tabů *}
-                {foreach $control->tabs AS $name => $tab}
-                        $("#"+{$control->getSnippetId('div_ul_li_a__'.$name)}).each(function(){
-                            var jThis = $(this);
-                            jThis.attr("url",jThis.attr("href"));
-                            jThis.attr("href","#"+{$control->getSnippetId($name)});
-                            jThis.get(0).jTab = $("#"+{$control->getSnippetId($name)})
-                            jThis.get(0).jTab.get(0).jAnchor = jThis;
+				{foreach $control->tabs AS $name => $tab}
+						$("#"+{$control->getSnippetId('div_ul_li_a__'.$name)}).each(function(){
+							var jThis = $(this);
+							jThis.attr("url",jThis.attr("href"));
+							jThis.attr("href","#"+{$control->getSnippetId($name)});
+							jThis.get(0).jTab = $("#"+{$control->getSnippetId($name)})
+							jThis.get(0).jTab.get(0).jAnchor = jThis;
 
-                            {* ### MODE_PRELOAD ### *}
-                            {if $control->mode == TabControl::MODE_PRELOAD}
-                                {if $activeTab->getName() != $name}
-                                    $.getJSON({link preload tab=>$name});
-                                {/if}
-                            {/if}
-                            
-                            $("#"+{$control->DOMtabsID}).bind("tabsselect",function(event,ui){
-                                if(ui.panel.id === {$control->getSnippetId($name)}){
-                                    var panel = $(ui.panel);
+							{* ### MODE_PRELOAD ### *}
+							{if $control->mode == TabControl::MODE_PRELOAD}
+								{if $activeTab->getName() != $name}
+									$.getJSON({link preload tab=>$name});
+								{/if}
+							{/if}
 
-                                    {* ### MODE_LAZY ### *}
-                                    {if $control->mode == TabControl::MODE_LAZY}
-                                        if(panel.html() == {$control->loaderText}){
-                                            $.getJSON(jThis.attr("url"));
-                                        }
-                                    {/if}
+							$("#"+{$control->DOMtabsID}).bind("tabsselect",function(event,ui){
+								if(ui.panel.id === {$control->getSnippetId($name)}){
+									var panel = $(ui.panel);
 
-                                    {* ### MODE_RELOAD ### *}
-                                    {if $control->mode == TabControl::MODE_RELOAD}
-                                        {if is_string($control->loaderText)}
-                                            jThis.get(0).jTab.html({$control->loaderText});
-                                        {/if}
-                                        $.getJSON(jThis.attr("url"));
-                                    {/if}
-                                }
-                            })
-                        });
-                {/foreach}
+									{* ### MODE_LAZY ### *}
+									{if $control->mode == TabControl::MODE_LAZY}
+										if(panel.html() == {$control->loaderText}){
+											$.getJSON(jThis.attr("url"));
+										}
+									{/if}
 
-                /* Tohle by bylo fajn, ale nevím jak změnit persistentní parametr v průběhu renderování
-                {if $control->mode === TabControl::MODE_PRELOAD}
-                    $.getJSON({link preload!});
-                {/if}
-                */
+									{* ### MODE_RELOAD ### *}
+									{if $control->mode == TabControl::MODE_RELOAD}
+										{if is_string($control->loaderText)}
+											jThis.get(0).jTab.html({$control->loaderText});
+										{/if}
+										$.getJSON(jThis.attr("url"));
+									{/if}
+								}
+							})
+						});
+				{/foreach}
+
+				/* Tohle by bylo fajn, ale nevím jak změnit persistentní parametr v průběhu renderování
+				{if $control->mode === TabControl::MODE_PRELOAD}
+					$.getJSON({link preload!});
+				{/if}
+				*/
 		// Zavoláme jQueryUI Tabs
-                $("#"+{$control->DOMtabsID}).tabs({!$component->jQueryTabsOptions});
+				$("#"+{$control->DOMtabsID}).tabs({!$component->jQueryTabsOptions});
 
 		// Přeřazování tabů
 		{if $control->sortable}
@@ -144,17 +144,17 @@ For more information please see http://nettephp.com
 			.find(".ui-tabs-nav")
 			.sortable(options);
 		{/if};
-            })
-        </script>
-        {snippet JavaScript}
-            <script type="text/JavaScript">
-                $(function(){
-                    var tabs = $("#"+{$control->DOMtabsID})
-                    {foreach $control->javaScript AS $code}
-                        {!$code}
-                    {/foreach}
-                });
-            </script>
-        {/snippet}
-    @{/if}
+			})
+		</script>
+		{snippet JavaScript}
+			<script type="text/JavaScript">
+				$(function(){
+					var tabs = $("#"+{$control->DOMtabsID})
+					{foreach $control->javaScript AS $code}
+						{!$code}
+					{/foreach}
+				});
+			</script>
+		{/snippet}
+	@{/if}
 {/snippet}

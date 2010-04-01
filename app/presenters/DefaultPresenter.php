@@ -231,7 +231,7 @@ class DefaultPresenter extends BasePresenter {
 		/* $this["tabs"] - class TabControl (objekt skupiny Tabů)
 		 * $this["tabs"]["form2"] - class Tab (objekt jednoho tabu)
 		 * $this["tabs"]["form2"]->content - class AppForm (obsah tabu)
-		 */
+		*/
 		$this["tabs"]["edit"]->content["Id"]->value = $customerNumber;
 		$this["tabs"]->select("edit"); // Nikam nepřesměrovává, pouze přepne tab. (s JS i bez něj)
 	}
@@ -379,7 +379,7 @@ class DefaultPresenter extends BasePresenter {
 	function createComponentModesNoAjax($name,$tab) {
 		return $this->createComponentAnotherTabControl($name, TabControl::MODE_NO_AJAX,$tab);
 	}
-	
+
 	function createComponentModesReload($name,$tab) {
 		return $this->createComponentAnotherTabControl($name, TabControl::MODE_RELOAD,$tab);
 	}

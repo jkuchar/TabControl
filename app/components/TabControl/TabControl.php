@@ -349,9 +349,9 @@ class TabControl extends Control {
 	function selectAnchor($tab,$caption="") {
 		$this->tabExists($tab,TRUE);
 		return Html::el("a")
-		    ->setHtml($caption)
-		    ->href($this->generateSelectLink($tab))
-		    ->onclick("$('#".$this->DOMtabsID."').tabs('select','".$this->getSnippetId($tab)."');return false;");
+			->setHtml($caption)
+			->href($this->generateSelectLink($tab))
+			->onclick("$('#".$this->DOMtabsID."').tabs('select','".$this->getSnippetId($tab)."');return false;");
 	}
 
 

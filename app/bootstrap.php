@@ -46,18 +46,18 @@ $application->onShutdown[] = 'BaseModel::disconnect';
 
 $router = $application->getRouter();
 /*
-    $application->errorPresenter = "Error";
-    $application->catchExceptions = Environment::isProduction() ? TRUE : FALSE;
+	$application->errorPresenter = "Error";
+	$application->catchExceptions = Environment::isProduction() ? TRUE : FALSE;
 */
 $router[] = new Route('index.php', array(
-    'presenter' => 'Default',
-    'action' => 'default',
-    ), Route::ONE_WAY);
+	'presenter' => 'Default',
+	'action' => 'default',
+), Route::ONE_WAY);
 
 $router[] = new Route('<presenter>/<action>/<id>', array(
-    'presenter' => 'Default',
-    'action' => 'default',
-    'id' => null,
+	'presenter' => 'Default',
+	'action' => 'default',
+	'id' => null,
 ));
 
 /**
